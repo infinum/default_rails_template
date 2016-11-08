@@ -26,7 +26,7 @@ HEREDOC
 
 create_file 'config/initializers/bugsnag.rb', BUGSNAG_CONFIG
 
-# Remove unwanted gems. spring will be added later in the development group of gems
+# Remove gems we don't use.
 %w(coffee-rails jbuilder tzinfo-data).each do |unwanted_gem|
   gsub_file('Gemfile', /gem '#{unwanted_gem}'.*\n/, '')
 end
