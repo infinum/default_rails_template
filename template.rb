@@ -9,7 +9,7 @@ end
 create_file 'README.md', 'Development: run ./bin/setup', force: true
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
-STAGING_DB_CONFIG = <<~HEREDOC
+STAGING_DB_CONFIG = <<-HEREDOC.strip_heredoc
   staging:
     <<: *default
     database: <%= @app_name %>_staging
@@ -17,7 +17,7 @@ HEREDOC
 
 append_to_file 'config/database.yml', STAGING_DB_CONFIG, after: "database: #{@app_name}_test\n\n"
 
-BUGSNAG_CONFIG = <<~HEREDOC
+BUGSNAG_CONFIG = <<-HEREDOC.strip_heredoc
   Bugsnag.configure do |config|
     config.api_key = Rails.application.secrets.bugsnag['api_key']
     config.notify_release_stages = %w(production staging)
@@ -41,7 +41,7 @@ run 'bundle install'
 
 git :init
 
-GITIGNORED_FILES = <<~HEREDOC
+GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
   .sass-cache
   powder
   public/system
