@@ -1,3 +1,5 @@
+require 'net/http'
+
 create_file 'README.md', 'Development: run ./bin/setup', force: true
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
@@ -77,6 +79,9 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
 HEREDOC
 
 create_file 'config/application.yml', FIGARO_FILE
+
+RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
+create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
 run 'bundle install'
 
