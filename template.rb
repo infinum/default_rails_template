@@ -1,11 +1,3 @@
-def api_only?
-  builder.options.api
-end
-
-def html_app?
-  !api_only?
-end
-
 create_file 'README.md', 'Development: run ./bin/setup', force: true
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
@@ -34,8 +26,19 @@ end
 # Remove comments from the Gemfile
 gsub_file('Gemfile', /^\s*#+.*\n/, '')
 
-# Add Pry Rails
-append_to_file 'Gemfile', "  gem 'pry-rails'\n", after: "gem 'byebug', platform: :mri\n"
+append_to_file 'Gemfile', after: "group :development, :test do\n" do
+  <<-HEREDOC
+  gem 'pry-rails'
+  gem 'rspec-rails'
+  HEREDOC
+end
+
+append_to_file 'Gemfile', after: "group :development do\n" do
+  <<-HEREDOC
+  gem 'rubocop', require: false
+  gem 'overcommit', require: false
+  HEREDOC
+end
 
 gem_group :staging, :production do
   gem 'bugsnag'
