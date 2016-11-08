@@ -26,10 +26,16 @@ end
 # Remove comments from the Gemfile
 gsub_file('Gemfile', /^\s*#+.*\n/, '')
 
+append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
+  <<-HEREDOC
+  gem 'bugsnag'
+  gem 'figaro'
+  HEREDOC
+end
+
 append_to_file 'Gemfile', after: "group :development, :test do\n" do
   <<-HEREDOC
   gem 'pry-rails'
-  gem 'rspec-rails'
   HEREDOC
 end
 
@@ -40,9 +46,37 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   HEREDOC
 end
 
-gem_group :staging, :production do
-  gem 'bugsnag'
-end
+SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
+  default: &default
+    secret_key_base: <%= Figaro.env.secret_key_base! %>
+    bugsnag:
+      api_key: <%= Figaro.env.bugsnag_api_key! %>
+
+  development:
+    <<: *default
+
+  test:
+    <<: *default
+
+  staging:
+    <<: *default
+
+  production:
+    <<: *default
+HEREDOC
+
+create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
+
+FIGARO_FILE = <<-HEREDOC.strip_heredoc
+  bugsnag_api_key: ''
+
+  development:
+    secret_key_base: #{SecureRandom.hex(64)}
+  test:
+    secret_key_base: #{SecureRandom.hex(64)}
+HEREDOC
+
+create_file 'config/application.yml', FIGARO_FILE
 
 run 'bundle install'
 
@@ -55,6 +89,8 @@ GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
   dump.rdb
   logfile
   .DS_Store
+  # Ignore application configuration
+  config/application*.yml
 HEREDOC
 
 append_file '.gitignore', GITIGNORED_FILES
