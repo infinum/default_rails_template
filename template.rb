@@ -17,6 +17,15 @@ HEREDOC
 
 append_to_file 'config/database.yml', STAGING_DB_CONFIG, after: "database: #{@app_name}_test\n\n"
 
+BUGSNAG_CONFIG = <<~HEREDOC
+  Bugsnag.configure do |config|
+    config.api_key = Rails.application.secrets.bugsnag['api_key']
+    config.notify_release_stages = %w(production staging)
+  end
+HEREDOC
+
+create_file 'config/initializers/bugsnag.rb', BUGSNAG_CONFIG
+
 # Remove unwanted gems. spring will be added later in the development group of gems
 %w(coffee-rails jbuilder tzinfo-data).each do |unwanted_gem|
   gsub_file('Gemfile', /gem '#{unwanted_gem}'.*\n/, '')
