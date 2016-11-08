@@ -37,6 +37,10 @@ gsub_file('Gemfile', /^\s*#+.*\n/, '')
 # Add Pry Rails
 append_to_file 'Gemfile', "  gem 'pry-rails'\n", after: "gem 'byebug', platform: :mri\n"
 
+gem_group :staging, :production do
+  gem 'bugsnag'
+end
+
 run 'bundle install'
 
 git :init
