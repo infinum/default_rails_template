@@ -7,7 +7,7 @@ rails new myapp --database=postgresql -T -m https://raw.githubusercontent.com/in
 ```
 The `-T` flag skips minitest files.
 
-The `-m` flag tells the generator to run our app template.
+The `-m` flag tells the generator to run our app [template](https://github.com/infinum/default_rails_template/blob/master/template.rb).
 
 ## What does this template do?
 
