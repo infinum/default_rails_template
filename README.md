@@ -13,7 +13,7 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 
 - Updates the README.md file
 - Creates a `config/environments/staging.rb` file
-- Creates a [Bugsnag](bugsnag.com) initializer
+- Creates a [Bugsnag](https://bugsnag.com) initializer
 - Removes gems we never use: `coffee-rails`, `jbuilder` & `tzinfo-data`
 - Adds [Bugsnag](https://github.com/bugsnag/bugsnag-ruby) & [Figaro](https://github.com/laserlemon/figaro) to the Gemfile
 - Adds [Pry-Rails](https://github.com/rweng/pry-rails) to the Gemfile, inside of the development and test group
