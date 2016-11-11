@@ -29,9 +29,9 @@ end
 gsub_file('Gemfile', /^\s*#+.*\n/, '')
 
 append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
-  <<-HEREDOC
-  gem 'bugsnag'
-  gem 'figaro'
+  <<-HEREDOC.strip_heredoc
+    gem 'bugsnag'
+    gem 'figaro'
   HEREDOC
 end
 
