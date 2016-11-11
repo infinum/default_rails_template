@@ -32,12 +32,13 @@ append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
   <<-HEREDOC.strip_heredoc
     gem 'bugsnag'
     gem 'figaro'
+    gem 'pry-rails'
   HEREDOC
 end
 
 append_to_file 'Gemfile', after: "group :development, :test do\n" do
   <<-HEREDOC
-  gem 'pry-rails'
+  gem 'pry-byebug'
   HEREDOC
 end
 
