@@ -46,6 +46,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   <<-HEREDOC
   gem 'rubocop', require: false
   gem 'overcommit', require: false
+  gem 'secrets_cli', require: false
   HEREDOC
 end
 
@@ -85,6 +86,8 @@ RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_te
 create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
 run 'bundle install'
+
+run 'bundle exec secrets init'
 
 git :init
 
