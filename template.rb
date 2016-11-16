@@ -86,7 +86,7 @@ RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_te
 create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
 MINA_DEPLOY_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/mina_deploy.rb'.freeze
-create_file '.rubocop.yml', Net::HTTP.get(URI(MINA_DEPLOY_URL))
+create_file 'config/deploy.rb', Net::HTTP.get(URI(MINA_DEPLOY_URL))
 
 run 'bundle install'
 
