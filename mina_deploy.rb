@@ -3,6 +3,7 @@ require 'mina/git'
 require 'mina/secrets'
 require 'mina/infinum'
 
+set :application_name, 'awesome_app'
 set :repository, 'git://...'
 set :user, 'deploy'
 
