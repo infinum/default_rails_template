@@ -84,6 +84,42 @@ create_file 'config/application.yml', FIGARO_FILE
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
 create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
+OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
+CommitMsg:
+  CapitalizedSubject:
+    enabled: false
+  HardTabs:
+    enabled: true
+
+PreCommit:
+  BundleAudit:
+    enabled: true
+
+  BundleCheck:
+    enabled: true
+
+  RuboCop:
+    enabled: true
+    on_warn: fail
+
+  RailsSchemaUpToDate:
+    enabled: true
+
+  TrailingWhitespace:
+    enabled: true
+    exclude:
+      - '**/db/structure.sql'
+
+  HardTabs:
+    enabled: true
+
+PrePush:
+  RSpec:
+    enabled: true
+HEREDOC
+
+create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
+
 run 'bundle install'
 
 git :init
