@@ -1,6 +1,52 @@
 require 'net/http'
 
-create_file 'README.md', 'Development: run ./bin/setup', force: true
+README_MD = <<-HEREDOC.strip_heredoc
+# README
+
+## Dependent projects
+  * [Single sign-on service](https://github.com/infinum/accounts)
+
+## Binaries
+### System
+  * node, eslint
+
+### Gem
+  * vault
+
+## Setup
+Before:
+  * clone and setup single sign on service using pow
+  * ensure you have read permissions for vault
+
+Run:
+```bash
+./bin/setup
+```
+
+After:
+```bash
+overcommit --sign
+```
+
+## Test suite
+Run:
+```bash
+rspec
+```
+
+## Deployment
+Environments:
+  * staging <stg>: [staging](https://staging.com)
+  * production <prod>: [production](https://production.com)
+
+Run:
+```
+mina <env> deploy
+```
+HEREDOC
+
+create_file 'README.md', README_MD
+remove_file 'README.rdoc'
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
 STAGING_DB_CONFIG = <<-HEREDOC.strip_heredoc
