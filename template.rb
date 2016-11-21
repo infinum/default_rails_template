@@ -3,15 +3,12 @@ require 'net/http'
 README_MD = <<-HEREDOC.strip_heredoc
 # README
 
-## Dependent projects
+## Dependencies
+### Projects
   * [Single sign-on service](https://github.com/infinum/accounts)
 
-## Binaries
 ### System
   * node, eslint
-
-### Gem
-  * vault
 
 ## Setup
 Before:
@@ -45,8 +42,8 @@ mina <env> deploy
 ```
 HEREDOC
 
-create_file 'README.md', README_MD
-remove_file 'README.rdoc'
+create_file 'README.md', README_MD, force: true
+
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
 STAGING_DB_CONFIG = <<-HEREDOC.strip_heredoc
