@@ -46,6 +46,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   <<-HEREDOC
   gem 'rubocop', require: false
   gem 'overcommit', require: false
+  gem 'bundler-audit', require: false
   HEREDOC
 end
 
@@ -111,10 +112,6 @@ PreCommit:
       - '**/db/structure.sql'
 
   HardTabs:
-    enabled: true
-
-PrePush:
-  RSpec:
     enabled: true
 HEREDOC
 
