@@ -121,6 +121,9 @@ run 'bundle install'
 
 git :init
 
+run 'overcommit --install'
+run 'overcommit --sign'
+
 GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
   .sass-cache
   powder
