@@ -47,6 +47,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'rubocop', require: false
   gem 'overcommit', require: false
   gem 'bundler-audit', require: false
+  gem 'secrets_cli', require: false
   HEREDOC
 end
 
@@ -118,6 +119,8 @@ HEREDOC
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
 
 run 'bundle install'
+
+run 'bundle exec secrets init'
 
 git :init
 
