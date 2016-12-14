@@ -47,6 +47,8 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'rubocop', require: false
   gem 'overcommit', require: false
   gem 'mina-infinum', require: false
+  gem 'bundler-audit', require: false
+  gem 'secrets_cli', require: false
   HEREDOC
 end
 
@@ -85,12 +87,51 @@ create_file 'config/application.yml', FIGARO_FILE
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
 create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
+
 MINA_DEPLOY_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/mina_deploy.rb'.freeze
 create_file 'config/deploy.rb', Net::HTTP.get(URI(MINA_DEPLOY_URL))
 
+OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
+CommitMsg:
+  CapitalizedSubject:
+    enabled: false
+  HardTabs:
+    enabled: true
+
+PreCommit:
+  BundleAudit:
+    enabled: true
+
+  BundleCheck:
+    enabled: true
+
+  RuboCop:
+    enabled: true
+    on_warn: fail
+
+  RailsSchemaUpToDate:
+    enabled: true
+
+  TrailingWhitespace:
+    enabled: true
+    exclude:
+      - '**/db/structure.sql'
+
+  HardTabs:
+    enabled: true
+HEREDOC
+
+create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
+
+
 run 'bundle install'
 
+run 'bundle exec secrets init'
+
 git :init
+
+run 'overcommit --install'
+run 'overcommit --sign'
 
 GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
   .sass-cache
