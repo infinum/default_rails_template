@@ -53,9 +53,9 @@ end
 
 SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
-    secret_key_base: <%= Figaro.env.secret_key_base! %>
+    secret_key_base: <%= ENV.fetch('secret_key_base') %>
     bugsnag:
-      api_key: <%= Figaro.env.bugsnag_api_key! %>
+      api_key: <%= ENV.fetch('bugsnag_api_key') %>
 
   development:
     <<: *default
@@ -73,8 +73,6 @@ HEREDOC
 create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
 FIGARO_FILE = <<-HEREDOC.strip_heredoc
-  bugsnag_api_key: ''
-
   development:
     secret_key_base: #{SecureRandom.hex(64)}
   test:
