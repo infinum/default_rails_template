@@ -11,5 +11,5 @@ AllCops:
   Exclude:
     - 'db/schema.rb'
     - 'db/migrate/*.rb'
-  Rails:
-    Enabled: true
+Rails:
+  Enabled: true
