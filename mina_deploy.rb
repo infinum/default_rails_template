@@ -7,14 +7,14 @@ set :application_name, 'awesome_app'
 set :repository, 'git://...'
 set :user, 'deploy'
 
-def staging
+task :staging do
   set :domain, 'staging.com'
   set :deploy_to, '/home/deploy/www/...'
   set :rails_env, 'staging'
   set :branch, 'develop'
 end
 
-def production
+task :production do
   set :domain, 'production.com'
   set :deploy_to, '/home/deploy/www/...'
   set :rails_env, 'production'
