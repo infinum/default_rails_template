@@ -21,9 +21,9 @@ Run:
 ./bin/setup
 ```
 
-After:
+Run after each git pull:
 ```bash
-overcommit --sign
+./bin/update
 ```
 
 ## Test suite
@@ -32,15 +32,13 @@ Run:
 rspec
 ```
 
-## Deployment
-Environments:
+## Environments
   * staging <stg>: [staging](https://staging.com)
   * production <prod>: [production](https://production.com)
 
-Run:
-```
-mina <env> deploy
-```
+## Deployment
+[Semaphore](https://semaphoreci.com)
+
 HEREDOC
 
 create_file 'README.md', README_MD, force: true
@@ -64,23 +62,23 @@ BIN_SETUP = <<-HEREDOC.strip_heredoc
   APP_ROOT = Pathname.new File.expand_path('../../', __FILE__)
 
   Dir.chdir APP_ROOT do
-    puts '\n== Installing dependencies =='
+    puts '== Installing dependencies =='
     system 'gem install bundler --conservative'
     system 'bundle check || bundle install'
 
-    # puts '\n== Installing node modules =='
+    # puts '== Installing node modules =='
     # system 'npm install'
 
-    puts "\n== Installing overcommit =="
+    puts "== Installing overcommit =="
     system 'overcommit --install'
 
-    puts "\n== Pulling secrets =="
+    puts '== Pulling secrets =='
     system 'secrets pull'
 
-    puts "\n== Preparing database =="
+    puts '== Preparing database =='
     system 'bin/rake db:setup'
 
-    puts "\n== Removing old logs and tempfiles =="
+    puts '== Removing old logs and tempfiles =='
     system 'rm -f log/*'
     system 'rm -rf tmp/cache'
   end
@@ -94,20 +92,20 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
   APP_ROOT = Pathname.new File.expand_path('../../', __FILE__)
 
   Dir.chdir APP_ROOT do
-    puts '\n== Installing dependencies =='
+    puts '== Installing dependencies =='
     system 'gem install bundler --conservative'
     system 'bundle check || bundle install'
 
-    # puts '\n== Installing node modules =='
+    # puts '== Installing node modules =='
     # system 'npm install'
 
-    # puts '\n== Building frontend =='
+    # puts '== Building frontend =='
     # system 'npm run build'
 
-    puts "\n== Pulling secrets =="
+    puts '== Pulling secrets =='
     system 'secrets pull'
 
-    puts "\n== Preparing database =="
+    puts '== Preparing database =='
     system 'bin/rake db:migrate'
   end
 HEREDOC
@@ -120,11 +118,10 @@ BUGSNAG_CONFIG = <<-HEREDOC.strip_heredoc
     config.notify_release_stages = %w(production staging)
   end
 HEREDOC
-
 create_file 'config/initializers/bugsnag.rb', BUGSNAG_CONFIG
 
 # Remove gems we don't use.
-%w(coffee-rails jbuilder tzinfo-data).each do |unwanted_gem|
+%w(coffee-rails jbuilder tzinfo-data byebug).each do |unwanted_gem|
   gsub_file('Gemfile', /gem '#{unwanted_gem}'.*\n/, '')
 end
 
@@ -148,11 +145,29 @@ end
 
 append_to_file 'Gemfile', after: "group :development do\n" do
   <<-HEREDOC
-  gem 'rubocop', require: false
-  gem 'overcommit', require: false
-  gem 'mina-infinum', require: false
+  gem 'annotate'
+  gem 'better_errors'
+  gem 'binding_of_caller'
+  gem 'bullet'
   gem 'bundler-audit', require: false
+  gem 'letter_opener'
+  gem 'mina-infinum', require: false
+  gem 'overcommit', require: false
+  gem 'rubocop', require: false
   gem 'secrets_cli', require: false
+  HEREDOC
+end
+
+append_to_file 'config/environments/development.rb', after: 'Rails.application.configure do' do
+  <<-HEREDOC
+
+  config.action_mailer.delivery_method = :letter_opener
+
+  config.after_initialize do
+    Bullet.enable = true
+    Bullter.rails_logger = true
+    Bullet.add_footer = true
+  end
   HEREDOC
 end
 
@@ -225,7 +240,6 @@ PreCommit:
   HardTabs:
     enabled: true
 HEREDOC
-
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
 
 # .gitignore
