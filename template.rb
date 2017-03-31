@@ -1,5 +1,6 @@
 require 'net/http'
 
+# Readme.md
 README_MD = <<-HEREDOC.strip_heredoc
 # README
 
@@ -44,6 +45,7 @@ HEREDOC
 
 create_file 'README.md', README_MD, force: true
 
+# Staging environment config
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
 STAGING_DB_CONFIG = <<-HEREDOC.strip_heredoc
@@ -54,6 +56,64 @@ HEREDOC
 
 append_to_file 'config/database.yml', STAGING_DB_CONFIG, after: "database: #{@app_name}_test\n\n"
 
+# bin scripts
+BIN_SETUP = <<-HEREDOC.strip_heredoc
+  #!/usr/bin/env ruby
+  require 'pathname'
+
+  APP_ROOT = Pathname.new File.expand_path('../../', __FILE__)
+
+  Dir.chdir APP_ROOT do
+    puts '\n== Installing dependencies =='
+    system 'gem install bundler --conservative'
+    system 'bundle check || bundle install'
+
+    # puts '\n== Installing node modules =='
+    # system 'npm install'
+
+    puts "\n== Installing overcommit =="
+    system 'overcommit --install'
+
+    puts "\n== Pulling secrets =="
+    system 'secrets pull'
+
+    puts "\n== Preparing database =="
+    system 'bin/rake db:setup'
+
+    puts "\n== Removing old logs and tempfiles =="
+    system 'rm -f log/*'
+    system 'rm -rf tmp/cache'
+  end
+HEREDOC
+create_file 'bin/setup', BIN_SETUP, force: true
+
+BIN_UPDATE = <<-HEREDOC.strip_heredoc
+  #!/usr/bin/env ruby
+  require 'pathname'
+
+  APP_ROOT = Pathname.new File.expand_path('../../', __FILE__)
+
+  Dir.chdir APP_ROOT do
+    puts '\n== Installing dependencies =='
+    system 'gem install bundler --conservative'
+    system 'bundle check || bundle install'
+
+    # puts '\n== Installing node modules =='
+    # system 'npm install'
+
+    # puts '\n== Building frontend =='
+    # system 'npm run build'
+
+    puts "\n== Pulling secrets =="
+    system 'secrets pull'
+
+    puts "\n== Preparing database =="
+    system 'bin/rake db:migrate'
+  end
+HEREDOC
+create_file 'bin/update', BIN_UPDATE, force: true
+
+# bugsnag
 BUGSNAG_CONFIG = <<-HEREDOC.strip_heredoc
   Bugsnag.configure do |config|
     config.api_key = Rails.application.secrets.bugsnag['api_key']
@@ -71,6 +131,7 @@ end
 # Remove comments from the Gemfile
 gsub_file('Gemfile', /^\s*#+.*\n/, '')
 
+# Add gems
 append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
   <<-HEREDOC.strip_heredoc
     gem 'bugsnag'
@@ -95,6 +156,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   HEREDOC
 end
 
+# Secrets
 SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= ENV.fetch('secret_key_base') %>
@@ -125,13 +187,15 @@ HEREDOC
 
 create_file 'config/application.yml', FIGARO_FILE
 
+# Rubocop
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
 create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
-
+# Mina
 MINA_DEPLOY_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/mina_deploy.rb'.freeze
 create_file 'config/deploy.rb', Net::HTTP.get(URI(MINA_DEPLOY_URL))
 
+# Overcommit
 OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
 CommitMsg:
   CapitalizedSubject:
@@ -164,16 +228,7 @@ HEREDOC
 
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
 
-
-run 'bundle install'
-
-run 'bundle exec secrets init'
-
-git :init
-
-run 'overcommit --install'
-run 'overcommit --sign'
-
+# .gitignore
 GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
   .sass-cache
   powder
@@ -186,3 +241,13 @@ GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
 HEREDOC
 
 append_file '.gitignore', GITIGNORED_FILES
+
+# Finish
+run 'bundle install'
+
+run 'bundle exec secrets init'
+
+git :init
+
+run 'overcommit --install'
+run 'overcommit --sign'
