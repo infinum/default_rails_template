@@ -6,6 +6,7 @@ require 'mina/infinum'
 set :application_name, 'awesome_app'
 set :repository, 'git://...'
 set :user, 'deploy'
+# set :background_worker, 'dj'
 
 task :staging do
   set :domain, 'staging.com'
@@ -34,6 +35,7 @@ task :deploy do
 
     on :launch do
       invoke :restart_application
+      # invoke :'background_workers:restart'
     end
   end
 end
