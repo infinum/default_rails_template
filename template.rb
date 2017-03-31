@@ -46,6 +46,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   <<-HEREDOC
   gem 'rubocop', require: false
   gem 'overcommit', require: false
+  gem 'mina-infinum', require: false
   gem 'bundler-audit', require: false
   gem 'secrets_cli', require: false
   HEREDOC
@@ -84,6 +85,10 @@ create_file 'config/application.yml', FIGARO_FILE
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
 create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
 
+
+MINA_DEPLOY_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/mina_deploy.rb'.freeze
+create_file 'config/deploy.rb', Net::HTTP.get(URI(MINA_DEPLOY_URL))
+
 OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
 CommitMsg:
   CapitalizedSubject:
@@ -115,6 +120,7 @@ PreCommit:
 HEREDOC
 
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
+
 
 run 'bundle install'
 
