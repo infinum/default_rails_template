@@ -165,7 +165,7 @@ append_to_file 'config/environments/development.rb', after: 'Rails.application.c
 
   config.after_initialize do
     Bullet.enable = true
-    Bullter.rails_logger = true
+    Bullet.rails_logger = true
     Bullet.add_footer = true
   end
   HEREDOC
