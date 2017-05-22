@@ -154,6 +154,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'mina-infinum', require: false
   gem 'overcommit', require: false
   gem 'rubocop', require: false
+  gem 'rubocop-rspec', require: false
   gem 'secrets_cli', require: false
   HEREDOC
 end
@@ -195,7 +196,7 @@ create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
 FIGARO_FILE = <<-HEREDOC.strip_heredoc
   bugsnag_api_key: ADD_IT_HERE
-  
+
   development:
     secret_key_base: #{SecureRandom.hex(64)}
   test:
