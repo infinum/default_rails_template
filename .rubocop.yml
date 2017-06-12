@@ -1,16 +1,28 @@
+require: rubocop-rspec
+
 LineLength:
   Max: 100
 
 Documentation:
   Enabled: False
 
+FrozenStringLiteralComment:
+  Enabled: false
+
 WordArray:
   Enabled: False
+
+Rails:
+  Enabled: true
+
+RSpec/ExampleLength:
+  Max: 10
+
+Style/MutableConstant:
+  Enabled: false
 
 AllCops:
   Exclude:
     - 'db/schema.rb'
     - 'db/migrate/*.rb'
     - 'config/**/*.rb'
-Rails:
-  Enabled: true
