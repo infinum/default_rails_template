@@ -21,6 +21,10 @@ RSpec/ExampleLength:
 Style/MutableConstant:
   Enabled: false
 
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*_spec.rb'
+
 AllCops:
   Exclude:
     - 'db/schema.rb'
