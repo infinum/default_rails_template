@@ -141,6 +141,7 @@ append_to_file 'Gemfile', after: "group :development, :test do\n" do
   <<-HEREDOC
   gem 'pry-byebug'
   gem 'rspec-rails'
+  gem 'spring-commands-rspec'
   HEREDOC
 end
 
@@ -264,6 +265,8 @@ run 'bundle install'
 run 'bundle exec secrets init'
 
 run 'budnle exec rails generate rspec:install'
+
+run 'spring binstub --all'
 
 git :init
 
