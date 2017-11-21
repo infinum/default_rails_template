@@ -258,11 +258,19 @@ HEREDOC
 append_file '.gitignore', GITIGNORED_FILES
 
 # Finish
+
+## Sets global ruby version as local ruby version (Might not be the latest installed version)
+run 'rbenv local `rbenv global`'
+
+## Bundle install
 run 'bundle install'
 
+## Initializes secrets_cli
 run 'bundle exec secrets init'
 
+## Initialize git
 git :init
 
+## Overcommit install and sign
 run 'overcommit --install'
 run 'overcommit --sign'
