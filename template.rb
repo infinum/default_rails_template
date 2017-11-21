@@ -263,7 +263,7 @@ run 'bundle install'
 
 run 'bundle exec secrets init'
 
-run 'budnle exec rails generate rspec:install'
+run 'bundle exec rails generate rspec:install'
 
 git :init
 
