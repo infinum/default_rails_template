@@ -1,4 +1,5 @@
 require 'net/http'
+require_relative 'helpers'
 
 # Readme.md
 README_MD = <<-HEREDOC.strip_heredoc
@@ -141,7 +142,6 @@ append_to_file 'Gemfile', after: "group :development, :test do\n" do
   <<-HEREDOC
   gem 'pry-byebug'
   gem 'rspec-rails'
-  gem 'spring-commands-rspec'
   HEREDOC
 end
 
@@ -266,7 +266,14 @@ run 'bundle exec secrets init'
 
 run 'bundle exec rails generate rspec:install'
 
-run 'spring binstub --all'
+if yes?('Install spring')
+  append_to_file 'Gemfile', after: "group :development, :test do\n" do
+    <<-HEREDOC
+    gem 'spring-commands-rspec'
+    HEREDOC
+  end
+  run 'spring binstub --all'
+end
 
 git :init
 
