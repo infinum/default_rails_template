@@ -34,3 +34,12 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 ## Recommendations
 
 After running the template generator, this script will install overcommit which won't let you commit your project if it has some Rubocop offenses or if your Gemfile isn't alphabetically sorted. To sort your Gemfile, use the [Eefgilm](https://github.com/enilsen16/Eefgilm) gem. Install it with `gem install eefgilm` and run the `eefgilm` command to sort your Gemfile.
+
+## Development
+
+There are a couple of helpers you can use when developing:
+
+``` ruby
+ask_with_default # Presents a user with a question he can answer. Returns default if user does not enter anything
+yes?             # Ask a user yes/no question. Returns true/false
+```
