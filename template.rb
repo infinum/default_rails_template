@@ -1,5 +1,4 @@
 require 'net/http'
-require_relative 'helpers'
 
 # Readme.md
 README_MD = <<-HEREDOC.strip_heredoc
@@ -266,7 +265,7 @@ run 'bundle exec secrets init'
 
 run 'bundle exec rails generate rspec:install'
 
-if yes?('Install spring')
+if yes?('Install spring? [No]', :green)
   append_to_file 'Gemfile', after: "group :development, :test do\n" do
     <<-HEREDOC
     gem 'spring-commands-rspec'
