@@ -260,8 +260,20 @@ append_file '.gitignore', GITIGNORED_FILES
 
 # Finish
 
-## Sets global ruby version as local ruby version (Might not be the latest installed version)
-run 'rbenv local `rbenv global`'
+## Install latest ruby and sets it as local version
+
+say('Updating ruby-build and installing latest ruby', :cyan)
+
+if !run('brew info ruby-build', capture: true).include?('Not installed')
+  run 'brew upgrade ruby-build'
+else
+  run 'cd "$(rbenv root)"/plugins/ruby-build && git pull'
+end
+
+# stable MRI ruby builds do not have '-' in their names
+latest_ruby = run('rbenv install -l | grep -v - | tail -1', capture: true).strip
+run "rbenv install -s #{latest_ruby}"
+run "rbenv local #{latest_ruby}"
 
 ## Bundle install
 run 'bundle install'
@@ -279,7 +291,7 @@ if yes?('Install spring? [No]', :green)
     gem 'spring-commands-rspec'
     HEREDOC
   end
-  run 'spring binstub --all'
+  run 'bundle exec spring binstub --all'
 end
 
 ## Initialize git
