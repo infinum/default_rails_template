@@ -5,6 +5,6 @@ def ask_with_default(question, color, default)
   answer.to_s.strip.empty? ? default : answer
 end
 
-def install_spring?
-  ask_with_default('Install spring', :green, 'no') =~ /^y(es)?/i
+def yes?(message, color = :green)
+  ask_with_default(message, color, 'no') =~ /^y(es)?/i
 end

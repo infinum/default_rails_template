@@ -266,7 +266,7 @@ run 'bundle exec secrets init'
 
 run 'budnle exec rails generate rspec:install'
 
-if install_spring?
+if yes?('Install spring')
   append_to_file 'Gemfile', after: "group :development, :test do\n" do
     <<-HEREDOC
     gem 'spring-commands-rspec'
