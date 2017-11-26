@@ -264,7 +264,7 @@ run 'bundle install'
 
 run 'bundle exec secrets init'
 
-run 'budnle exec rails generate rspec:install'
+run 'bundle exec rails generate rspec:install'
 
 if yes?('Install spring')
   append_to_file 'Gemfile', after: "group :development, :test do\n" do
