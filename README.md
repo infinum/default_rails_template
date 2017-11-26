@@ -22,7 +22,9 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 - Adds [Bugsnag](https://github.com/bugsnag/bugsnag-ruby) & [Figaro](https://github.com/laserlemon/figaro) to the Gemfile
 - Adds [Pry-Rails](https://github.com/rweng/pry-rails) to the Gemfile, inside of the development and test group
 - Adds [Rubocop](https://github.com/bbatsov/rubocop), [RSpec-Rubocop](https://github.com/backus/rubocop-rspec) & [Overcommit](https://github.com/brigade/overcommit) to the Gemfile, inside of the development group
+- Adds [Rspec-Rails](https://github.com/rspec/rspec-rails) to the Gemfile and initializes it
 - Initializes deploy script with [Mina](https://github.com/mina-deploy/mina)
+- Initializes spring binstubs
 - Updates the secrets.yml file to use Figaro and have defaults
 - Creates a `config/application.yml` file for Figaro
 - Creates a `.rubocop.yml` file with our defaults
@@ -32,3 +34,12 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 ## Recommendations
 
 After running the template generator, this script will install overcommit which won't let you commit your project if it has some Rubocop offenses or if your Gemfile isn't alphabetically sorted. To sort your Gemfile, use the [Eefgilm](https://github.com/enilsen16/Eefgilm) gem. Install it with `gem install eefgilm` and run the `eefgilm` command to sort your Gemfile.
+
+## Development
+
+There are a couple of helpers you can use when developing:
+
+``` ruby
+ask_with_default # Presents a user with a question he can answer. Returns default if user does not enter anything
+yes?             # Ask a user yes/no question. Returns true/false
+```
