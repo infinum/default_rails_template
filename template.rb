@@ -140,6 +140,7 @@ end
 append_to_file 'Gemfile', after: "group :development, :test do\n" do
   <<-HEREDOC
   gem 'pry-byebug'
+  gem 'rspec-rails'
   HEREDOC
 end
 
@@ -261,6 +262,8 @@ append_file '.gitignore', GITIGNORED_FILES
 run 'bundle install'
 
 run 'bundle exec secrets init'
+
+run 'bundle exec rails generate rspec:install'
 
 git :init
 
