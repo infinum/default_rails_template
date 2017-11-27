@@ -264,10 +264,10 @@ append_file '.gitignore', GITIGNORED_FILES
 
 say('Updating ruby-build and installing latest ruby', :cyan)
 
-if !run('brew info ruby-build', capture: true).include?('Not installed')
-  run 'brew upgrade ruby-build'
-else
+if run('brew info ruby-build', capture: true).include?('Not installed')
   run 'cd "$(rbenv root)"/plugins/ruby-build && git pull'
+else
+  run 'brew upgrade ruby-build'
 end
 
 # stable MRI ruby builds do not have '-' in their names
