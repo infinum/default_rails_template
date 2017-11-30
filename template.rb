@@ -47,13 +47,30 @@ create_file 'README.md', README_MD, force: true
 # Staging environment config
 create_file 'config/environments/staging.rb', "require_relative 'production'"
 
-STAGING_DB_CONFIG = <<-HEREDOC.strip_heredoc
+DB_CONFIG = <<-HEREDOC.strip_heredoc
+  default: &default
+    adapter: postgresql
+    encoding: unicode
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    host: <%= Rails.application.secrets.database[:host] %>
+    database: <%= Rails.application.secrets.database[:name] %>
+    username: <%= Rails.application.secrets.database[:username] %>
+    password: <%= Rails.application.secrets.database[:password] %>
+
+  development:
+    <<: *default
+
+  test:
+    <<: *default
+
   staging:
     <<: *default
-    database: #{@app_name}_staging
+
+  production:
+    <<: *default
 HEREDOC
 
-append_to_file 'config/database.yml', STAGING_DB_CONFIG, after: "database: #{@app_name}_test\n\n"
+create_file 'config/database.yml', DB_CONFIG, force: true
 
 # bin scripts
 BIN_SETUP = <<-HEREDOC.strip_heredoc
@@ -178,6 +195,11 @@ end
 SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= Figaro.env.secret_key_base! %>
+    database:
+      database: <%= Figaro.env.database_name! %>
+      username: <%= Figaro.env.database_username! %>
+      password: <%= Figaro.env.database_password! %>
+      host: <%= Figaro.env.database_host! %>
     bugsnag:
       api_key: <%= Figaro.env.bugsnag_api_key! %>
 
@@ -197,12 +219,17 @@ HEREDOC
 create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
 FIGARO_FILE = <<-HEREDOC.strip_heredoc
+  database_host: localhost
+  database_username: postgres
+  database_password: ""
   bugsnag_api_key: ADD_IT_HERE
 
   development:
     secret_key_base: #{SecureRandom.hex(64)}
+    database_name: #{app_name}_development
   test:
     secret_key_base: #{SecureRandom.hex(64)}
+    database_name: #{app_name}_test
 HEREDOC
 
 create_file 'config/application.yml', FIGARO_FILE
