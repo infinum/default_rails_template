@@ -196,7 +196,7 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= Figaro.env.secret_key_base! %>
     database:
-      database: <%= Figaro.env.database_name! %>
+      name: <%= Figaro.env.database_name! %>
       username: <%= Figaro.env.database_username! %>
       password: <%= Figaro.env.database_password! %>
       host: <%= Figaro.env.database_host! %>
