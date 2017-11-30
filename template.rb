@@ -52,7 +52,7 @@ DB_CONFIG = <<-HEREDOC.strip_heredoc
     encoding: unicode
     pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
     host: <%= Rails.application.secrets.database[:host] %>
-    database: <%= Rails.application.secrets.database[:database] %>
+    database: <%= Rails.application.secrets.database[:name] %>
     username: <%= Rails.application.secrets.database[:username] %>
     password: <%= Rails.application.secrets.database[:password] %>
 
@@ -195,7 +195,7 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= Figaro.env.secret_key_base! %>
     database:
-      database: <%= Figaro.env.database_database! %>
+      database: <%= Figaro.env.database_name! %>
       username: <%= Figaro.env.database_username! %>
       password: <%= Figaro.env.database_password! %>
       host: <%= Figaro.env.database_host! %>
@@ -225,10 +225,10 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
 
   development:
     secret_key_base: #{SecureRandom.hex(64)}
-    database_database: #{app_name}_development
+    database_name: #{app_name}_development
   test:
     secret_key_base: #{SecureRandom.hex(64)}
-    database_database: #{app_name}_test
+    database_name: #{app_name}_test
 HEREDOC
 
 create_file 'config/application.yml', FIGARO_FILE
