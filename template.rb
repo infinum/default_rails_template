@@ -182,6 +182,7 @@ append_to_file 'config/environments/development.rb', after: 'Rails.application.c
   <<-HEREDOC
 
   config.action_mailer.delivery_method = :letter_opener
+  config.action_mailer.default_url_options = { host: 'http://localhost:3000' }
 
   config.after_initialize do
     Bullet.enable = true
@@ -195,13 +196,25 @@ end
 SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= Figaro.env.secret_key_base! %>
+
     database:
       name: <%= Figaro.env.database_name! %>
       username: <%= Figaro.env.database_username! %>
       password: <%= Figaro.env.database_password! %>
       host: <%= Figaro.env.database_host! %>
+
     bugsnag:
       api_key: <%= Figaro.env.bugsnag_api_key! %>
+
+    # aws:
+    #   access_key_id: <%= Figaro.env.aws_access_key_id! %>
+    #   secret_access_key: <%= Figaro.env.aws_secret_access_key! %>
+    #   region: <%= Figaro.env.aws_region! %>
+    #   bucket: <%= Figaro.env.aws_bucket! %>
+    #
+    # mailgun:
+    #   api_key: <%= Figaro.env.mailgun_api_key! %>
+
 
   development:
     <<: *default
@@ -218,21 +231,8 @@ HEREDOC
 
 create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
-FIGARO_FILE = <<-HEREDOC.strip_heredoc
-  database_host: localhost
-  database_username: postgres
-  database_password: ""
-  bugsnag_api_key: ADD_IT_HERE
-
-  development:
-    secret_key_base: #{SecureRandom.hex(64)}
-    database_name: #{app_name}_development
-  test:
-    secret_key_base: #{SecureRandom.hex(64)}
-    database_name: #{app_name}_test
-HEREDOC
-
-create_file 'config/application.yml', FIGARO_FILE
+FIGARO_FILE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/application.yml'.freeze
+create_file 'config/application.yml', Net::HTTP.get(URI(FIGARO_FILE_URL))
 
 # Rubocop
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
