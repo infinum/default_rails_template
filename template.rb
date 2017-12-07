@@ -230,8 +230,28 @@ HEREDOC
 
 create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
-FIGARO_FILE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/feature/add_keys_to_config/application.yml.erb'.freeze
-create_file 'config/application.yml', ERB.new(Net::HTTP.get(URI(FIGARO_FILE_URL))).result
+FIGARO_FILE = <<- HEREDOC.strip_heredoc
+  database_host: localhost
+  database_username: postgres
+  database_password: ""
+
+  bugsnag_api_key: BUGSNAG_API_KEY
+
+  # aws_access_key_id: AWS_ACCESS_KEY_ID
+  # aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+  # aws_region: AWS_REGION
+  # aws_bucket: AWS_BUCKET
+  # mailgun_api_key: MAILGUN_API_KEY
+
+  development:
+    secret_key_base: #{SecureRandom.hex(64)}
+    database_name: #{app_name}_development
+  test:
+    secret_key_base: #{SecureRandom.hex(64)}
+    database_name: #{app_name}_test
+HEREDOC
+
+create_file 'config/application.yml', FIGARO_FILE
 
 # Rubocop
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
