@@ -12,7 +12,7 @@ bugsnag_api_key: BUGSNAG_API_KEY
 
 development:
   secret_key_base: <%= SecureRandom.hex(64) %>
-  database_name: #{app_name}_development
+  database_name: <%= app_name %>_development
 test:
-  secret_key_base: #{SecureRandom.hex(64)}
-  database_name: #{app_name}_test
+  secret_key_base: <%= SecureRandom.hex(64) %>
+  database_name: <%= app_name %>_test

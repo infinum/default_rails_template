@@ -215,7 +215,6 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
     # mailgun:
     #   api_key: <%= Figaro.env.mailgun_api_key! %>
 
-
   development:
     <<: *default
 
@@ -231,8 +230,8 @@ HEREDOC
 
 create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
-FIGARO_FILE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/application.yml'.freeze
-create_file 'config/application.yml', Net::HTTP.get(URI(FIGARO_FILE_URL))
+FIGARO_FILE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/feature/add_keys_to_config/application.yml.erb'.freeze
+create_file 'config/application.yml', ERB.new(Net::HTTP.get(URI(FIGARO_FILE_URL))).result
 
 # Rubocop
 RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
