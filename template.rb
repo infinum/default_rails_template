@@ -133,7 +133,7 @@ create_file 'bin/update', BIN_UPDATE, force: true
 # bugsnag
 BUGSNAG_CONFIG = <<-HEREDOC.strip_heredoc
   Bugsnag.configure do |config|
-    config.api_key = Rails.application.secrets.bugsnag['api_key']
+    config.api_key = Rails.application.secrets.fetch(:bugsnag_api_key)
     config.notify_release_stages = %w(production staging)
   end
 HEREDOC
