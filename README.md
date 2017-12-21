@@ -2,6 +2,29 @@
 
 The [Infinum](infinum.co) default template for generating new Rails applications.
 
+## Requirements
+
+Install the latest ruby version and set it as global
+
+If you installed rbenv through homebrew:
+```shell
+brew upgrade ruby-build
+```
+
+If you installed rbenv with git:
+```shell
+  cd "$(rbenv root)"/plugins/ruby-build && git pull
+```
+
+then run if needed:
+
+```shell
+  rbenv install #{latest_ruby}
+  rbenv global #{latest_ruby}
+```
+
+## Usage
+
 ```shell
 rails new myapp --database=postgresql -T -B -m https://raw.githubusercontent.com/infinum/default_rails_template/master/template.rb
 ```

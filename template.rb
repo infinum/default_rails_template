@@ -288,20 +288,8 @@ append_file '.gitignore', GITIGNORED_FILES
 
 # Finish
 
-## Install latest ruby and sets it as local version
-
-say('Updating ruby-build and installing latest ruby', :cyan)
-
-if run('brew info ruby-build', capture: true).include?('Not installed')
-  run 'cd "$(rbenv root)"/plugins/ruby-build && git pull'
-else
-  run 'brew upgrade ruby-build'
-end
-
-# stable MRI ruby builds do not have '-' in their names
-latest_ruby = run('rbenv install -l | grep -v - | tail -1', capture: true).strip
-run "rbenv install -s #{latest_ruby}"
-run "rbenv local #{latest_ruby}"
+# set latest ruby version as local
+run 'rbenv local $(rbenv global)'
 
 ## Bundle install
 run 'bundle install'
