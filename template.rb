@@ -52,11 +52,11 @@ DB_CONFIG = <<-HEREDOC.strip_heredoc
     adapter: postgresql
     encoding: unicode
     pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-    host: <%= Rails.application.secrets.database[:host] %>
-    port: <%= Rails.application.secrets.database[:port] %>
-    database: <%= Rails.application.secrets.database[:name] %>
-    username: <%= Rails.application.secrets.database[:username] %>
-    password: <%= Rails.application.secrets.database[:password] %>
+    host: <%= Rails.application.secrets.fetch(:database_host) %>
+    port: <%= Rails.application.secrets.fetch(:database_port) %>
+    database: <%= Rails.application.secrets.fetch(:database_name) %>
+    username: <%= Rails.application.secrets.fetch(:database_username) %>
+    password: <%= Rails.application.secrets.fetch(:database_password) %>
 
   development:
     <<: *default
@@ -196,14 +196,12 @@ end
 SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= Figaro.env.secret_key_base! %>
-    database:
-      name: <%= Figaro.env.database_name! %>
-      username: <%= Figaro.env.database_username! %>
-      password: <%= Figaro.env.database_password! %>
-      host: <%= Figaro.env.database_host! %>
-      port: <%= Figaro.env.database_port! %>
-    bugsnag:
-      api_key: <%= Figaro.env.bugsnag_api_key! %>
+    database_name: <%= Figaro.env.database_name! %>
+    database_username: <%= Figaro.env.database_username! %>
+    database_password: <%= Figaro.env.database_password! %>
+    database_host: <%= Figaro.env.database_host! %>
+    database_port: <%= Figaro.env.database_port! %>
+    bugsnag_api_key: <%= Figaro.env.bugsnag_api_key! %>
 
   development:
     <<: *default
@@ -224,6 +222,7 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
   database_host: localhost
   database_username: postgres
   database_password: ""
+  database_port: 5432
   bugsnag_api_key: ADD_IT_HERE
 
   development:
