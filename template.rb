@@ -222,7 +222,7 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
   database_host: localhost
   database_username: postgres
   database_password: ""
-  database_port: 5432
+  database_port: "5432"
   bugsnag_api_key: ADD_IT_HERE
 
   development:
