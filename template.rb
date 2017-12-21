@@ -304,13 +304,13 @@ run "rbenv install -s #{latest_ruby}"
 run "rbenv local #{latest_ruby}"
 
 ## Bundle install
-run 'bundle install'
+run %(eval "$(rbenv init -)"; RBENV_VERSION=#{latest_ruby} bundle install)
 
 ## Initializes secrets_cli
-run 'bundle exec secrets init'
+run %(eval "$(rbenv init -)"; RBENV_VERSION=#{latest_ruby} bundle secrets init)
 
 ## Initialize rspec
-run 'bundle exec rails generate rspec:install'
+run %(eval "$(rbenv init -)"; RBENV_VERSION=#{latest_ruby} bundle rails generate rspec:install)
 
 ## Initialize spring
 if yes?('Install spring? [No]', :green)
@@ -319,7 +319,7 @@ if yes?('Install spring? [No]', :green)
     gem 'spring-commands-rspec'
     HEREDOC
   end
-  run 'bundle exec spring binstub --all'
+  run %(eval "$(rbenv init -)"; RBENV_VERSION=#{latest_ruby} bundle spring binstub --all)
 end
 
 ## Initialize git
