@@ -12,7 +12,7 @@ FrozenStringLiteralComment:
 WordArray:
   Enabled: false
 
-SymbolArray
+SymbolArray:
   Enabled: false
 
 Rails:
