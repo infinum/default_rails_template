@@ -4,13 +4,16 @@ LineLength:
   Max: 100
 
 Documentation:
-  Enabled: False
+  Enabled: false
 
 FrozenStringLiteralComment:
   Enabled: false
 
 WordArray:
-  Enabled: False
+  Enabled: false
+
+SymbolArray
+  Enabled: false
 
 Rails:
   Enabled: true
