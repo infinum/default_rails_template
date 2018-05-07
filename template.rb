@@ -60,9 +60,11 @@ DB_CONFIG = <<-HEREDOC.strip_heredoc
 
   development:
     <<: *default
+    database: #{app_name}_development
 
   test:
     <<: *default
+   database: #{app_name}_test
 
   staging:
     <<: *default
@@ -222,15 +224,15 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
   database_host: localhost
   database_username: postgres
   database_password: ""
+  database_name: ""
   database_port: "5432"
   bugsnag_api_key: ADD_IT_HERE
 
   development:
     secret_key_base: #{SecureRandom.hex(64)}
-    database_name: #{app_name}_development
+
   test:
     secret_key_base: #{SecureRandom.hex(64)}
-    database_name: #{app_name}_test
 HEREDOC
 
 create_file 'config/application.yml', FIGARO_FILE
