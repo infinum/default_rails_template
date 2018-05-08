@@ -64,7 +64,7 @@ DB_CONFIG = <<-HEREDOC.strip_heredoc
 
   test:
     <<: *default
-   database: #{app_name}_test
+    database: #{app_name}_test
 
   staging:
     <<: *default
