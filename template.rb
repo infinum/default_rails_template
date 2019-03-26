@@ -254,6 +254,8 @@ CommitMsg:
 PreCommit:
   BundleAudit:
     enabled: true
+    flags: ['--update']
+    on_warn: fail
 
   BundleCheck:
     enabled: true
