@@ -352,6 +352,14 @@ if yes?('Install spring? [No]', :green)
   run 'bundle exec spring binstub --all'
 end
 
+## Ask about default PR reviewers
+default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @d4be4st @melcha @nikone. Default reviewers:', :green)
+append_to_file '.github/CODEOWNERS' do
+  <<~HEREDOC
+  * #{default_reviewers}
+  HEREDOC
+end
+
 ## Initialize git
 git :init
 
