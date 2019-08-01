@@ -291,6 +291,19 @@ HEREDOC
 
 append_file '.gitignore', GITIGNORED_FILES
 
+# Ignore rubocop warnings in db/seeds.rb
+SEEDS_DISABLE_IGNORE = <<-HEREDOC.strip_heredoc
+# rubocop:disable Metrics/LineLength
+HEREDOC
+
+SEEDS_ENABLE_IGNORE = <<-HEREDOC.strip_heredoc
+# rubocop:enable Metrics/LineLength
+
+HEREDOC
+
+prepend_file 'db/seeds.rb', SEEDS_DISABLE_IGNORE
+append_file 'db/seeds.rb', SEEDS_ENABLE_IGNORE
+
 # Finish
 
 # set latest ruby version as local
@@ -321,3 +334,6 @@ git :init
 ## Overcommit install and sign
 run 'overcommit --install'
 run 'overcommit --sign'
+
+# Fix default rubocop errors
+run 'bundle exec rubocop -a'
