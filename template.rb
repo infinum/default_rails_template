@@ -291,6 +291,30 @@ HEREDOC
 
 append_file '.gitignore', GITIGNORED_FILES
 
+# .github/PULL_REQUEST_TEMPLATE.md
+PULL_REQUEST_TEMPLATE_FILE = <<-HEREDOC.strip_heredoc
+Task: [#__TASK_NUMBER__](__ADD_URL_TO_PRODUCTIVE_TASK__)
+
+#### Aim
+
+
+#### Solution
+
+
+HEREDOC
+
+create_file '.github/PULL_REQUEST_TEMPLATE.md', PULL_REQUEST_TEMPLATE_FILE
+
+# .github/CODEOWNERS
+CODEOWNERS_FILE = <<-HEREDOC.strip_heredoc
+# For more info about the file read https://help.github.com/en/articles/about-code-owners
+
+# Set default PR reviewers. For example:
+# * @d4be4st @melcha @nikone
+HEREDOC
+
+create_file '.github/CODEOWNERS', CODEOWNERS_FILE
+
 # Ignore rubocop warnings in db/seeds.rb
 SEEDS_DISABLE_IGNORE = <<-HEREDOC.strip_heredoc
 # rubocop:disable Metrics/LineLength
