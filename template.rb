@@ -176,7 +176,8 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'mina-infinum', require: false
   gem 'overcommit', require: false
   gem 'rubocop', require: false
-  gem 'rubocop-rspec', require: false
+  gem 'rubocop-rspec', require: false  
+  gem 'rubocop-rails', require: false
   gem 'secrets_cli', require: false
   HEREDOC
 end
