@@ -170,13 +170,14 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'annotate'
   gem 'better_errors'
   gem 'binding_of_caller'
+  gem 'brakeman', require: false
   gem 'bullet'
   gem 'bundler-audit', require: false
   gem 'letter_opener'
   gem 'mina-infinum', require: false
   gem 'overcommit', require: false
   gem 'rubocop', require: false
-  gem 'rubocop-rspec', require: false  
+  gem 'rubocop-rspec', require: false
   gem 'rubocop-rails', require: false
   gem 'secrets_cli', require: false
   HEREDOC
@@ -257,6 +258,7 @@ PreCommit:
     enabled: true
     flags: ['--update']
     on_warn: fail
+    command: ['bundle', 'exec', 'bundle-audit']
 
   BundleCheck:
     enabled: true
@@ -264,6 +266,7 @@ PreCommit:
   RuboCop:
     enabled: true
     on_warn: fail
+    command: ['bundle', 'exec', 'rubocop']
 
   RailsSchemaUpToDate:
     enabled: true
@@ -275,6 +278,11 @@ PreCommit:
 
   HardTabs:
     enabled: true
+
+PrePush:
+  Brakeman:
+    enabled: true
+    command: ['bundle', 'exec', 'brakeman']
 HEREDOC
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
 
