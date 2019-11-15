@@ -5,6 +5,7 @@ require 'mina/infinum'
 
 set :application_name, 'awesome_app'
 set :repository, 'git://...'
+set :system_manager, :systemd
 # set :background_worker, 'dj' / 'sidekiq'
 
 task :staging do
@@ -12,8 +13,7 @@ task :staging do
   set :deploy_to, '/home/$USERNAME/www/...'
   set :user, '$USERNAME'
   set :rails_env, 'staging'
-  set :branch, 'develop'
-  set :service_manager, :systemd
+  set :branch, 'staging'
 end
 
 task :production do
@@ -22,7 +22,6 @@ task :production do
   set :user, '$USERNAME'
   set :rails_env, 'production'
   set :branch, 'master'
-  set :service_manager, :systemd
 
 end
 
