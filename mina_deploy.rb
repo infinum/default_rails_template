@@ -13,6 +13,7 @@ task :staging do
   set :deploy_to, '/home/$USERNAME/www/...'
   set :user, '$USERNAME'
   set :rails_env, 'staging'
+  set :secrets_env, 'staging'
   set :branch, 'staging'
 end
 
@@ -21,17 +22,17 @@ task :production do
   set :deploy_to, '/home/$USERNAME/www/...'
   set :user, '$USERNAME'
   set :rails_env, 'production'
+  set :secrets_env, 'production'
   set :branch, 'master'
-
 end
 
 task :deploy do
   invoke :'git:ensure_pushed'
   deploy do
     invoke :'git:clone'
-    invoke :'secrets:pull'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
+    command "bundle exec secrets pull -e #{fetch(:secrets_env)} -y"
     invoke :'rails:db_migrate'
     invoke :'rails:assets_precompile'
     invoke :'deploy:cleanup'
