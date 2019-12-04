@@ -32,7 +32,7 @@ task :deploy do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
-    command "bundle exec secrets pull -e #{fetch(:secrets_env)} -y"
+    invoke :'secrets:pull'
     invoke :'rails:db_migrate'
     invoke :'rails:assets_precompile'
     invoke :'deploy:cleanup'
