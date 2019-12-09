@@ -94,7 +94,7 @@ BIN_SETUP = <<-HEREDOC.strip_heredoc
     system 'overcommit --install'
 
     puts '== Pulling secrets =='
-    system 'secrets pull'
+    system 'bundle exec secrets pull'
 
     puts '== Preparing database =='
     system 'bin/rake db:setup'
@@ -124,7 +124,7 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
     # system 'npm run build'
 
     puts '== Pulling secrets =='
-    system 'secrets pull'
+    system 'bundle exec secrets pull'
 
     puts '== Preparing database =='
     system 'bin/rake db:migrate'
@@ -155,6 +155,7 @@ append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
     gem 'bugsnag'
     gem 'figaro'
     gem 'pry-rails'
+    gem 'secrets_cli', require: false
   HEREDOC
 end
 
@@ -179,7 +180,6 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'rubocop', require: false
   gem 'rubocop-rspec', require: false
   gem 'rubocop-rails', require: false
-  gem 'secrets_cli', require: false
   HEREDOC
 end
 
