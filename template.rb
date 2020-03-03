@@ -358,6 +358,7 @@ if yes?('Install spring? [No]', :green)
     gem 'spring-commands-rspec'
     HEREDOC
   end
+  run 'bundle install'
   run 'bundle exec spring binstub --all'
 end
 
