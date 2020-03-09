@@ -20,6 +20,15 @@ Style/WordArray:
 
 Style/SymbolArray:
   EnforcedStyle: brackets
+  
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
 
 Rails:
   Enabled: true
