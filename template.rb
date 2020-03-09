@@ -353,9 +353,10 @@ run 'bundle exec rails generate rspec:install'
 
 ## Initialize spring
 if yes?('Install spring? [No]', :green)
-  append_to_file 'Gemfile', after: "group :development, :test do\n" do
+  append_to_file 'Gemfile', after: "group :development do\n" do
     <<-HEREDOC
     gem 'spring-commands-rspec'
+    gem 'spring-commands-rubocop'
     HEREDOC
   end
   run 'bundle install'
