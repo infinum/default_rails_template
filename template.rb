@@ -283,6 +283,11 @@ PrePush:
   Brakeman:
     enabled: true
     command: ['bundle', 'exec', 'brakeman']
+
+  ZeitwerkCheck:
+    enabled: true
+    description: 'Checks project structure for Zeitwerk compatibility'
+    command: ['bundle', 'exec', 'rails zeitwerk:check']
 HEREDOC
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
 
@@ -323,6 +328,29 @@ CODEOWNERS_FILE = <<-HEREDOC.strip_heredoc
 HEREDOC
 
 create_file '.github/CODEOWNERS', CODEOWNERS_FILE
+
+# .git-hooks/pre_push/zeitwerk_check.rb
+ZEITWERK_CHECK_FILE = <<-HEREDOC.strip_heredoc
+# frozen_string_literal: true
+
+module Overcommit
+  module Hook
+    module PrePush
+      class ZeitwerkCheck < Base
+        def run
+          result = execute(command)
+          return :pass if result.success?
+
+          extract_messages result.stderr.split("\\n"),
+                           /^expected file (?<file>[[:alnum:]].*\.rb)/
+        end
+      end
+    end
+  end
+end
+HEREDOC
+
+create_file '.git-hooks/pre_push/zeitwerk_check.rb', ZEITWERK_CHECK_FILE
 
 # Ignore rubocop warnings in db/seeds.rb
 SEEDS_DISABLE_IGNORE = <<-HEREDOC.strip_heredoc
@@ -376,6 +404,7 @@ git :init
 ## Overcommit install and sign
 run 'overcommit --install'
 run 'overcommit --sign'
+run 'overcommit --sign pre-push'
 
 # Fix default rubocop errors
 run 'bundle exec rubocop -a'
