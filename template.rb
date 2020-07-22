@@ -89,8 +89,8 @@ BIN_SETUP = <<-HEREDOC.strip_heredoc
     system 'gem install bundler --conservative'
     system 'bundle check || bundle install'
 
-    # puts '== Installing node modules =='
-    # system 'npm install'
+    # puts '== Installing JS dependencies =='
+    # system 'yarn install'
 
     puts "== Installing overcommit =="
     system 'overcommit --install'
@@ -119,11 +119,8 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
     system 'gem install bundler --conservative'
     system 'bundle check || bundle install'
 
-    # puts '== Installing node modules =='
-    # system 'npm install'
-
-    # puts '== Building frontend =='
-    # system 'npm run build'
+    # puts '== Installing JS dependencies =='
+    # system 'yarn install'
 
     puts '== Pulling secrets =='
     system 'bundle exec secrets pull'
