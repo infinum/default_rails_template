@@ -11,7 +11,9 @@ README_MD = <<-HEREDOC.strip_heredoc
 ## Dependencies
 
 ### System
-  * yarn, eslint
+  * Ruby (defined in .rbenv file)
+  * Node.js (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
+  * Yarn (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
 
 ## Setup
 Before:
