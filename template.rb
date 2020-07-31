@@ -11,7 +11,9 @@ README_MD = <<-HEREDOC.strip_heredoc
 ## Dependencies
 
 ### System
-  * yarn, eslint
+  * Ruby (defined in .ruby-version file)
+  * Node.js (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
+  * Yarn (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
 
 ## Setup
 Before:
@@ -87,8 +89,8 @@ BIN_SETUP = <<-HEREDOC.strip_heredoc
     system 'gem install bundler --conservative'
     system 'bundle check || bundle install'
 
-    # puts '== Installing node modules =='
-    # system 'npm install'
+    # puts '== Installing JS dependencies =='
+    # system 'yarn install'
 
     puts "== Installing overcommit =="
     system 'overcommit --install'
@@ -117,11 +119,8 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
     system 'gem install bundler --conservative'
     system 'bundle check || bundle install'
 
-    # puts '== Installing node modules =='
-    # system 'npm install'
-
-    # puts '== Building frontend =='
-    # system 'npm run build'
+    # puts '== Installing JS dependencies =='
+    # system 'yarn install'
 
     puts '== Pulling secrets =='
     system 'bundle exec secrets pull'
