@@ -176,9 +176,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'letter_opener'
   gem 'mina-infinum', require: false
   gem 'overcommit', require: false
-  gem 'rubocop', require: false
-  gem 'rubocop-rspec', require: false
-  gem 'rubocop-rails', require: false
+  gem 'rubocop-infinum', require: false
   HEREDOC
 end
 
