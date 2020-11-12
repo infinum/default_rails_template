@@ -248,6 +248,8 @@ create_file 'config/deploy.rb', Net::HTTP.get(URI(MINA_DEPLOY_URL))
 
 # Overcommit
 OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
+gemfile: Gemfile
+
 CommitMsg:
   HardTabs:
     enabled: true
