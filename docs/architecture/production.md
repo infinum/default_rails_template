@@ -68,23 +68,19 @@
       <summary> CORS </summary>
 
       ```json
-      {
-        "CORSRule": {
-           "AllowedOrigin": "*",
-           "AllowedMethod": [
-              "GET",
-              "POST",
-              "PUT"
-           ],
-           "MaxAgeSeconds": "3000",
-           "ExposeHeader": "ETag",
-           "AllowedHeader": [
-              "content-type",
-              "x-amz-date",
-              "x-amz-content-sha256"
-           ]
+      [
+        {
+          "AllowedHeaders": [
+            "content-type",
+            "x-amz-date",
+            "x-amz-content-sha256"
+          ],
+          "AllowedMethods": [ "PUT", "POST", "GET" ],
+          "AllowedOrigins": [ "*" ],
+          "ExposeHeaders": [ "ETag" ],
+          "MaxAgeSeconds": 3000
         }
-      }
+      ]
       ```
     </details>
 
