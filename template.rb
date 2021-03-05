@@ -1,12 +1,11 @@
-require 'net/http'
+BASE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master'.freeze
 
 # Readme.md
 README_MD = <<-HEREDOC.strip_heredoc
-[![Maintainability](https://api.codeclimate.com/v1/badges/4149506cc9736f8ae8b7/maintainability)](https://codeclimate.com/repos/55f5e5f26956802431004c66/maintainability)
-[![Build Status](https://semaphoreci.com/api/v1/projects/dcaf37ba-7b17-4653-9bf1-67c5a4755d14/866843/badge.svg)](https://semaphoreci.com/infinum/web)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/4149506cc9736f8ae8b7/test_coverage)](https://codeclimate.com/repos/55f5e5f26956802431004c66/test_coverage)
-[![Issue Count](https://codeclimate.com/repos/56bcf5c3461848007e001c25/badges/4149506cc9736f8ae8b7/issue_count.svg)](https://codeclimate.com/repos/4149506cc9736f8ae8b7/feed)
+[![Build Status](https://docs.semaphoreci.com/essentials/status-badges/)](https://semaphoreci.com/infinum/APP)
 # README
+
+## [Technical Documentation](docs/README.md)
 
 ## Dependencies
 
@@ -35,16 +34,21 @@ Run:
 rspec
 ```
 
-## Environments
-  * staging <stg>: [staging](https://staging.com)
-  * production <prod>: [production](https://production.com)
-
-## Deployment
-[Semaphore](https://semaphoreci.com)
-
 HEREDOC
 
 create_file 'README.md', README_MD, force: true
+
+# Technical documentation
+[
+  'docs/README.md',
+  'docs/architecture/README.md',
+  'docs/architecture/production.md',
+  'docs/architecture/staging.md',
+  'docs/architecture/environment_variables.md',
+  'docs/architecture/services.md'
+].each do |filename|
+  get("#{BASE_URL}/#{filename}", filename)
+end
 
 # Staging environment config
 create_file 'config/environments/staging.rb', "require_relative 'production'"
@@ -237,12 +241,10 @@ HEREDOC
 create_file 'config/application.yml', FIGARO_FILE
 
 # Rubocop
-RUBOCOP_CONFIG_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/.rubocop.yml'.freeze
-create_file '.rubocop.yml', Net::HTTP.get(URI(RUBOCOP_CONFIG_URL))
+get("#{BASE_URL}/.rubocop.yml", '.rubocop.yml')
 
 # Mina
-MINA_DEPLOY_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master/mina_deploy.rb'.freeze
-create_file 'config/deploy.rb', Net::HTTP.get(URI(MINA_DEPLOY_URL))
+get("#{BASE_URL}/mina_deploy.rb", 'config/deploy.rb')
 
 # Overcommit
 OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
