@@ -2,6 +2,7 @@
 
 <!-- Main themes -->
 ### [Architecture](architecture/README.md)
+### [Development workflow](development_workflow.md)
 
 <!-- mostly helpers and stimulus controllers -->
 ## Components
