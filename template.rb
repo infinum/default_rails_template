@@ -330,6 +330,25 @@ HEREDOC
 
 create_file '.github/CODEOWNERS', CODEOWNERS_FILE
 
+# .github/dependabot.yml
+DEPENDABOT_FILE = <<-HEREDOC.strip_heredoc
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 2
+HEREDOC
+
+create_file '.github/dependabot.yml', DEPENDABOT_FILE
+
 # .git-hooks/pre_push/zeitwerk_check.rb
 ZEITWERK_CHECK_FILE = <<-HEREDOC.strip_heredoc
 # frozen_string_literal: true
