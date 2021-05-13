@@ -6,6 +6,7 @@ require 'mina/infinum'
 set :application_name, 'awesome_app'
 set :repository, 'git://...'
 set :service_manager, :systemd
+set :bundle_options, ''
 # set :background_worker, 'dj' / 'sidekiq'
 
 task :staging do
@@ -31,6 +32,8 @@ task :deploy do
   deploy do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
+    invoke :'bundle:install_gem'
+    command "export BUNDLER_APP_CONFIG='.bundle/server'"
     invoke :'bundle:install'
     command 'yarn install'
     invoke :'secrets:pull'
@@ -41,6 +44,7 @@ task :deploy do
     on :launch do
       invoke :restart_application
       # invoke :'background_workers:restart'
+      # invoke :link_sidekiq_assets
     end
   end
 end
