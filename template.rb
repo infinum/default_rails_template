@@ -374,11 +374,11 @@ create_file '.git-hooks/pre_push/zeitwerk_check.rb', ZEITWERK_CHECK_FILE
 
 # Ignore rubocop warnings in db/seeds.rb
 SEEDS_DISABLE_IGNORE = <<-HEREDOC.strip_heredoc
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 HEREDOC
 
 SEEDS_ENABLE_IGNORE = <<-HEREDOC.strip_heredoc
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength
 
 HEREDOC
 
