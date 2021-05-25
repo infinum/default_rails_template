@@ -418,6 +418,16 @@ append_to_file '.github/CODEOWNERS' do
   HEREDOC
 end
 
+# add annotate task file and ignore its rubocop violations
+run 'bundle exec rails generate annotate:install'
+ANNOTATE_TASK_FILE = 'lib/tasks/auto_annotate_models.rake'
+prepend_file ANNOTATE_TASK_FILE, "# frozen_string_literal: true\n\n"
+append_to_file ANNOTATE_TASK_FILE, after: "its thing in production.\n" do
+  "# rubocop:disable Metrics/BlockLength, Rails/RakeEnvironment\n"
+end
+append_file ANNOTATE_TASK_FILE,
+            "# rubocop:enable Metrics/BlockLength, Rails/RakeEnvironment\n"
+
 ## Initialize git
 git :init
 
