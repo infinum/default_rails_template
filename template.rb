@@ -135,6 +135,114 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
 HEREDOC
 create_file 'bin/update', BIN_UPDATE, force: true
 
+BIN_BUILD = <<~HEREDOC.strip_heredoc
+  #!/usr/bin/env bash
+
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+
+  echo "=========== setting env variables ==========="
+  export RAILS_ENV='test'
+  export BUNDLE_APP_CONFIG='.bundle/ci-build'
+
+  echo "=========== install bundler ==========="
+  bundler_version=`tail -n 1 Gemfile.lock | xargs`
+  time gem install bundler:$bundler_version --no-document
+
+  echo "=========== bundle install ==========="
+  time bundle install
+
+  echo "=========== bundle audit ==========="
+  time bundle exec bundle-audit check --update
+
+  echo "=========== zeitwerk check ==========="
+  time bundle exec rails zeitwerk:check
+
+  echo "=========== brakeman ==========="
+  time bundle exec brakeman
+
+  echo "=========== rubocop  ==========="
+  time bundle exec rubocop --format simple
+
+  echo "=========== tests ============="
+  echo "=========== secrets pull ============="
+  time bundle exec secrets pull -e development -y
+
+  echo "=========== rails db:test:prepare ==========="
+  time bundle exec rails db:test:prepare
+
+  echo "=========== rspec ==========="
+  time bundle exec rspec
+HEREDOC
+create_file 'bin/build', BIN_BUILD, force: true
+
+BIN_DEPLOY = <<~HEREDOC.strip_heredoc
+  #!/usr/bin/env bash
+
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+
+  echo "=========== setting env variables ==========="
+  environment=$1
+  export RAILS_ENV='test'
+  export BUNDLE_APP_CONFIG='.bundle/ci-deploy'
+
+  echo "=========== install bundler ==========="
+  bundler_version=`tail -n 1 Gemfile.lock | xargs`
+  time gem install bundler:$bundler_version --no-document
+
+  echo "=========== bundle install ==========="
+  time bundle install
+
+  echo "=========== mina deploy =============="
+  time bundle exec mina $environment ssh_keyscan_domain deploy
+
+  #############################################
+  # Uncomment this if you need to publish dox #
+  # Delete not needed environment             #
+  #############################################
+  # if [[ $environment =~ ^(production|uat|staging)$ ]]; then
+  #   echo "=========== secrets pull =============="
+  #   time bundle exec secrets pull -e development -y
+
+  #   echo "=========== yarn install =============="
+  #   time yarn install
+
+  #   echo "=========== rails db:test:prepare ==========="
+  #   time bundle exec rails db:test:prepare
+
+  #   echo "=========== mina dox publish ==========="
+  #   time bundle exec mina $environment dox:publish
+  # fi
+HEREDOC
+create_file 'bin/deploy', BIN_DEPLOY, force: true
+
+# bundler config
+BUNDLER_CI_BUILD_CONFIG = <<~HEREDOC.strip_heredoc
+  ---
+  BUNDLE_DEPLOYMENT: "true"
+  BUNDLE_WITHOUT: "development deploy"
+HEREDOC
+create_file '.bundle/ci-build/config', BUNDLER_CI_BUILD_CONFIG, force: true
+
+BUNDLER_CI_DEPLOY_CONFIG = <<~HEREDOC.strip_heredoc
+  ---
+  BUNDLE_DEPLOYMENT: "true"
+  BUNDLE_WITHOUT: "default development test ci"
+  # use line below when using dox
+  # BUNDLE_WITHOUT: "development"
+HEREDOC
+create_file '.bundle/ci-deploy/config', BUNDLER_CI_DEPLOY_CONFIG, force: true
+
+BUNDLER_SERVER_CONFIG = <<~HEREDOC.strip_heredoc
+  ---
+  BUNDLE_DEPLOYMENT: "true"
+  BUNDLE_WITHOUT: "development test ci deploy"
+HEREDOC
+create_file '.bundle/server/config', BUNDLER_SERVER_CONFIG, force: true
+
 # bugsnag
 BUGSNAG_CONFIG = <<-HEREDOC.strip_heredoc
   Bugsnag.configure do |config|
@@ -157,15 +265,9 @@ append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
   <<-HEREDOC.strip_heredoc
     gem 'bugsnag'
     gem 'figaro'
+    gem 'pry-byebug'
     gem 'pry-rails'
     gem 'secrets_cli', require: false
-  HEREDOC
-end
-
-append_to_file 'Gemfile', after: "group :development, :test do\n" do
-  <<-HEREDOC
-  gem 'pry-byebug'
-  gem 'rspec-rails'
   HEREDOC
 end
 
@@ -174,13 +276,37 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'annotate'
   gem 'better_errors'
   gem 'binding_of_caller'
-  gem 'brakeman', require: false
   gem 'bullet'
-  gem 'bundler-audit', require: false
-  gem 'letter_opener'
-  gem 'mina-infinum', require: false
   gem 'overcommit', require: false
-  gem 'rubocop-infinum', require: false
+  HEREDOC
+end
+
+append_to_file 'Gemfile' do
+  <<-HEREDOC.strip_heredoc
+
+    group :test do 
+      gem 'rspec-rails'
+    end
+  HEREDOC
+end
+
+append_to_file 'Gemfile' do
+  <<-HEREDOC.strip_heredoc
+
+    group :ci do
+      gem 'brakeman', require: false
+      gem 'bundler-audit', require: false
+      gem 'rubocop-infinum', require: false
+    end
+  HEREDOC
+end
+
+append_to_file 'Gemfile' do
+  <<-HEREDOC.strip_heredoc
+
+    group :deploy do
+      gem 'mina-infinum', require: false
+    end
   HEREDOC
 end
 
@@ -401,7 +527,7 @@ run 'bundle exec rails generate rspec:install'
 
 ## Initialize spring
 if yes?('Install spring? [No]', :green)
-  append_to_file 'Gemfile', after: "group :development, :test do\n" do
+  append_to_file 'Gemfile', after: "group :development do\n" do
     <<-HEREDOC
     gem 'spring-commands-rspec'
     HEREDOC
