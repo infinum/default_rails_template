@@ -1,5 +1,6 @@
 # Environment Variables
 
+ <!-- DEVELOPER -->
 ## General
 * `secret_key_base`
 * `bugsnag_api_key`

@@ -53,10 +53,21 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 - Creates a `.rubocop.yml` file with our defaults
 - Git inits
 - Adds more common gitignored files to `.gitignore`
+- Adds documentation in `docs` folders
 
 ## Recommendations
 
 After running the template generator, this script will install overcommit which won't let you commit your project if it has some Rubocop offenses or if your Gemfile isn't alphabetically sorted. To sort your Gemfile, use the [Eefgilm](https://github.com/enilsen16/Eefgilm) gem. Install it with `gem install eefgilm` and run the `eefgilm` command to sort your Gemfile.
+
+## Filling up the documentation
+
+Here is an example of line inside documentation:
+```
+* ACCOUNT-NAME (ACCOUNT-ID) <!-- infinum-dev (7021-9251-8610) --> <!-- DEVOPS -->
+```
+The first comment is an example of how to fill the data on the left
+
+The second comment is who can fill this information. It can be either DEVOPS or DEVELOPER. If you as a DEVELOPER have access to a specific information, you can also fill up DEVOPS lines (for example, if you have access to AWS console, most of the information in server documenation can be filed by a developer).
 
 ## Development
 
