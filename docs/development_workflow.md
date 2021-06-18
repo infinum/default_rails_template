@@ -1,3 +1,14 @@
+# Prerequisites
+Before developer starts working on a project he needs to get access to the
+* project in the project management software (productive, jira, etc)
+* project Slack channels
+* project Google Drive
+* git repository 
+* development and staging secrets
+* bugsnag project
+* semaphore project
+* staging server
+
 # Type of tasks:
 * Documentation
 * Hotfixes (needs to be on production asap)
