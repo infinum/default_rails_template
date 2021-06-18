@@ -1,13 +1,20 @@
 # Prerequisites
-Before developer starts working on a project he needs to get access to the
+Before developer starts working on a project he needs to get access project related items.
+
+Project manager can give you access to:
 * project in the project management software (productive, jira, etc)
 * project Slack channels
 * project Google Drive
-* git repository 
-* development and staging secrets
-* bugsnag project
-* semaphore project
-* staging server
+* project design (Figma, Sketch, etc)
+  
+Devops can give you access to:
+* 1password vault
+* git repository - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
+* development and staging secrets - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
+* bugsnag project - **LINK-TO-BUGSNAG** <!-- https://bugsnag.com/path-to-project --> <!-- DEVELOPER -->
+* semaphore project - **LINK-TO-SEMAPHORE** <!-- https://semaphoreci.com/path-to-project --> <!-- DEVELOPER -->
+* staging and/or UAT server
+<!-- any other project specific services that are required for development -->
 
 # Type of tasks:
 * Documentation
