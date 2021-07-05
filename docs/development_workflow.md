@@ -2,10 +2,10 @@
 Before developer starts working on a project he needs to get access project related items.
 
 Project manager can give you access to:
-* project in the project management software (productive, jira, etc)
-* project Slack channels
-* project Google Drive
-* project design (Figma, Sketch, etc)
+* project in the project management software (productive, jira, etc) **LINK-TO-PROJECT** <!-- https://app.productive.io/path-to-project --> <!-- DEVELOPER -->
+* project Slack channels **LINK-TO-SLACK-CHANNELS** <!-- https://infinum.slack.com/path-to-project --> <!-- DEVELOPER -->
+* project Google Drive **LINK-TO-GOOGLE-DRIVE** <!-- https://drive.google.com//path-to-project --> <!-- DEVELOPER -->
+* project design (Figma, Sketch, etc) **LINK-TO-DESIGN** <!-- https://www.figma.com/path-to-project --> <!-- DEVELOPER -->
   
 Devops can give you access to:
 * 1password vault
