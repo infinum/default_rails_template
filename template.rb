@@ -153,6 +153,12 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   echo "=========== bundle install ==========="
   time bundle install
 
+  echo "=========== secrets pull ============="
+  time bundle exec secrets pull -e development -y
+
+  echo "=========== rails db:test:prepare ==========="
+  time bundle exec rails db:test:prepare
+
   echo "=========== bundle audit ==========="
   time bundle exec bundle-audit check --update
 
@@ -166,12 +172,6 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   time bundle exec rubocop --format simple
 
   echo "=========== tests ============="
-  echo "=========== secrets pull ============="
-  time bundle exec secrets pull -e development -y
-
-  echo "=========== rails db:test:prepare ==========="
-  time bundle exec rails db:test:prepare
-
   echo "=========== rspec ==========="
   time bundle exec rspec
 HEREDOC
