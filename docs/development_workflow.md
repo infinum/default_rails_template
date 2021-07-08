@@ -38,7 +38,7 @@ Architecture
 <master> -> <architecture branch>
 [WriteCode] -> [Open PullRequest] -> (PR approved) -> <staging> -> [confirm] -> <uat> -> [confirm] -> <master>
 
-Dashboard / Event Dashboard / API
+Frontend / API
 <architecture branch> -> <dashboard branch>
 [WriteCode] -> [Open PullRequest] -> (PR approved) -> <staging> -> [confirm] -> <uat> -> [confirm](Qa approved) -> <master> -> [confirm](QA approved)
 ```
@@ -72,7 +72,7 @@ Architecture
 <master> -> <architecture branch>
 [WriteCode] -> [Open PullRequest] -> (PR approved) -> <staging> -> [confirm] -> <master>
 
-Dashboard / Event Dashboard / API
+Frontend / API
 <architecture branch> -> <dashboard branch>
 [WriteCode] -> [Open PullRequest] -> (PR approved) -> <staging> -> [confirm](Qa approved) -> <master> -> [confirm](QA approved)
 ```
