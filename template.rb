@@ -203,7 +203,7 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
   time bundle install
 
   echo "=========== mina deploy =============="
-  time bundle exec mina $environment ssh_keyscan_domain deploy
+  time bundle exec mina $environment ssh_keyscan_domain setup deploy
 
   #############################################
   # Uncomment this if you need to publish dox #
