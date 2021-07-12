@@ -162,6 +162,13 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   echo "=========== bundle audit ==========="
   time bundle exec bundle-audit check --update --quiet
 
+  #############################################
+  # Uncomment this if you need yarn libraries #
+  # for running your tests                    #
+  #############################################
+  # echo "=========== yarn install ==========="
+  # time yarn install
+
   echo "=========== zeitwerk check ==========="
   time bundle exec rails zeitwerk:check
 
@@ -283,7 +290,7 @@ end
 append_to_file 'Gemfile' do
   <<-HEREDOC.strip_heredoc
 
-    group :test do 
+    group :test do
       gem 'rspec-rails'
     end
   HEREDOC
