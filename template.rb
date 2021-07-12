@@ -160,18 +160,17 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   time bundle exec rails db:test:prepare
 
   echo "=========== bundle audit ==========="
-  time bundle exec bundle-audit check --update
+  time bundle exec bundle-audit check --update --quiet
 
   echo "=========== zeitwerk check ==========="
   time bundle exec rails zeitwerk:check
 
   echo "=========== brakeman ==========="
-  time bundle exec brakeman
+  time bundle exec brakeman -q
 
   echo "=========== rubocop  ==========="
   time bundle exec rubocop --format simple
 
-  echo "=========== tests ============="
   echo "=========== rspec ==========="
   time bundle exec rspec
 HEREDOC
