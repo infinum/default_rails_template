@@ -163,8 +163,8 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   time bundle exec bundle-audit check --update --quiet
 
   #############################################
-  # Uncomment this if you yarn libraries for  #
-  # running your tests                        #
+  # Uncomment this if you need yarn libraries #
+  # for running your tests                    #
   #############################################
   # echo "=========== yarn install ==========="
   # time yarn install
