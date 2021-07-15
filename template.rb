@@ -31,7 +31,7 @@ Run after each git pull:
 ## Test suite
 Run:
 ```bash
-rspec
+bundle exec rspec
 ```
 
 HEREDOC
