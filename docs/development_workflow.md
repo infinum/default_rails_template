@@ -1,5 +1,5 @@
 # Prerequisites
-Before developer starts working on a project he needs to get access project related items.
+Before you start working on the project, you need to get access to project-related items.
 
 Project manager can give you access to:
 * project in the project management software (productive, jira, etc) **LINK-TO-PROJECT** <!-- https://app.productive.io/path-to-project --> <!-- DEVELOPER -->
