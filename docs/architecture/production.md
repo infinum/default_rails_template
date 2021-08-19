@@ -7,10 +7,25 @@
 ### General
 
 * type: **EC2** <!-- EC2 / ECS / Baremetal --> <!-- DEVOPS -->
+<!-- IF type=EC2 -->
 * hostname: **HOSTNAME** <!-- rovinj --> <!-- DEVOPS -->
 * size: **EC2-SIZE** <!-- t3.large --> <!-- DEVOPS -->
 * ip: **SERVER-IP** <!-- 127.0.0.1 --> <!-- DEVOPS -->
 * domain: **SERVER-DOMAIN** <!-- cekila.byinfinum.co --> <!-- DEVOPS -->
+<!-- elsif type=ECS -->
+* domain: **APP-DOMAIN** <!-- cekila.byinfinum.co --> <!-- DEVOPS -->
+* cluster: **CLUSTER-NAME** <!-- production --> <!-- DEVOPS -->
+* launch_type: **Fargate** <!-- Fargate / Kuberneters --><!-- DEVOPS -->
+* size: <!-- DEVOPS -->
+  * memory: **4096 MiB** <!-- DEVOPS -->
+  * cpu: **2048 unit** <!-- DEVOPS -->
+* auto_scaling: <!-- DEVOPS -->
+  * minimum_tasks: **2**
+  * maximum_tasks: **20**
+  * scaleup: **Add 100 when 70 <= CPUUtilization**
+  * scaledown: **Remove 50 when 50 >= CPUUtilization**
+<!-- end -->
+
 * application dependencies <!-- DEVELOPER -->
   * none
   <!-- * vips (v. 8.7.3) -->
