@@ -50,7 +50,7 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 - Initializes spring binstubs
 - Updates the secrets.yml file to use Figaro and have defaults
 - Creates a `config/application.yml` file for Figaro
-- Creates a `.rubocop.yml` file with our defaults
+- Creates a `.infinum.yml` file with our RuboCop defaults
 - Git inits
 - Adds more common gitignored files to `.gitignore`
 - Adds documentation in `docs` folders
