@@ -1,4 +1,4 @@
 inherit_gem:
-  rubocop-infinum: .infinum.yml
+  rubocop-infinum: rubocop.yml
 
 require: rubocop-infinum
