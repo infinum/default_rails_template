@@ -2,18 +2,24 @@
 Before you start working on the project, you need to get access to project-related items.
 
 Project manager can give you access to:
-* project in the project management software (productive, jira, etc) **LINK-TO-PROJECT** <!-- https://app.productive.io/path-to-project --> <!-- DEVELOPER -->
-* project Slack channels **LINK-TO-SLACK-CHANNELS** <!-- https://infinum.slack.com/path-to-project --> <!-- DEVELOPER -->
-* project Google Drive **LINK-TO-GOOGLE-DRIVE** <!-- https://drive.google.com//path-to-project --> <!-- DEVELOPER -->
-* project design (Figma, Sketch, etc) **LINK-TO-DESIGN** <!-- https://www.figma.com/path-to-project --> <!-- DEVELOPER -->
-  
+* project in the project management software (productive, jira, etc) - [LINK-TO-PROJECT](LINK-TO-PROJECT) <!-- https://app.productive.io/path-to-project --> <!-- DEVELOPER -->
+* project Slack channels
+  * [#internal-channel-name](LINK-TO-SLACK-CHANNEL) <!-- https://infinum.slack.com/path-to-project --> <!-- DEVELOPER -->
+  * [#client-channel-name](LINK-TO-SLACK-CHANNEL) <!-- https://infinum.slack.com/path-to-project --> <!-- DEVELOPER -->
+* project Google Drive - [LINK-TO-GOOGLE-DRIVE](LINK-TO-GOOGLE-DRIVE) <!-- https://drive.google.com//path-to-project --> <!-- DEVELOPER -->
+* project design (Figma, Sketch, etc) - [LINK-TO-DESIGN](LINK-TO-DESIGN) <!-- https://www.figma.com/path-to-project --> <!-- DEVELOPER -->
+* 1password vault - VAULT-NAME <!-- Project ProjectName --> <!-- DEVELOPER -->
+
 Devops can give you access to:
-* 1password vault - **VAULT-NAME** <!-- DEVELOPER -->
-* git repository - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
-* development and staging secrets - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
-* bugsnag project - **LINK-TO-BUGSNAG** <!-- https://bugsnag.com/path-to-project --> <!-- DEVELOPER -->
-* semaphore project - **LINK-TO-SEMAPHORE** <!-- https://semaphoreci.com/path-to-project --> <!-- DEVELOPER -->
-* staging and/or UAT server
+
+* git repository - [LINK-TO-GIT-REPO](LINK-TO-GIT-REPO) <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
+* development and staging secrets - [LINK-TO-GIT-REPO](LINK-TO-GIT-REPO) <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
+* bugsnag project - [LINK-TO-BUGSNAG](LINK-TO-BUGSNAG) <!-- https://bugsnag.com/path-to-project --> <!-- DEVELOPER -->
+* semaphore project - [LINK-TO-SEMAPHORE](LINK-TO-SEMAPHORE) <!-- https://semaphoreci.com/path-to-project --> <!-- DEVELOPER -->
+* servers
+  * staging - [LINK-TO-STAGING](LINK-TO-STAGING)
+  * any other environment - [LINK-TO-OTHER-ENV](LINK-TO-OTHER-ENV)
+
 <!-- any other project specific services that are required for development -->
 
 # Type of tasks:
@@ -94,4 +100,3 @@ Frontend / API
 <architecture branch> -> <dashboard branch>
 [WriteCode] -> [Open PullRequest] -> (PR approved) -> <staging> -> [confirm](Qa approved) -> <master> -> [confirm](QA approved)
 ```
-
