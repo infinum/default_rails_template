@@ -1,7 +1,7 @@
 # Technical Documentation
 
 <!-- Main themes -->
-### [Architecture](architecture/README.md)
+### [Architecture](architecture.md)
 ### [Development workflow](development_workflow.md)
 
 <!-- mostly helpers and stimulus controllers -->
