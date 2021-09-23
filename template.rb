@@ -333,13 +333,28 @@ end
 SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
   default: &default
     secret_key_base: <%= Figaro.env.secret_key_base! %>
+
     database_name: <%= Figaro.env.database_name! %>
     database_username: <%= Figaro.env.database_username! %>
     database_password: <%= Figaro.env.database_password! %>
     database_host: <%= Figaro.env.database_host! %>
     database_port: <%= Figaro.env.database_port! %>
+
     bugsnag_api_key: <%= Figaro.env.bugsnag_api_key! %>
 
+    aws_s3_access_key_id: <%= Figaro.env.aws_s3_access_key_id! %>
+    aws_s3_secret_access_key: <%= Figaro.env.aws_s3_secret_access_key! %>
+    aws_s3_region: <%= Figaro.env.aws_s3_region! %>
+    aws_s3_bucket: <%= Figaro.env.aws_s3_bucket! %>
+
+    mailgun_api_key: <%= Figaro.env.mailgun_api_key! %>
+    mailgun_domain: <%= Figaro.env.mailgun_domain! %>
+    mailgun_host: <%= Figaro.env.mailgun_host! %>
+
+    redis_url: <%= Figaro.env.redis_url! %>
+
+    # sidekiq_dashboard_username: <%= Figaro.env.sidekiq_dashboard_username! %>
+    # sidekiq_dashboard_password: <%= Figaro.env.sidekiq_dashboard_password! %>
   development:
     <<: *default
 
@@ -358,10 +373,25 @@ create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 FIGARO_FILE = <<-HEREDOC.strip_heredoc
   database_host: localhost
   database_username: postgres
-  database_password: ""
-  database_name: ""
-  database_port: "5432"
-  bugsnag_api_key: ADD_IT_HERE
+  database_password: ''
+  database_name: ''
+  database_port: '5432'
+
+  bugsnag_api_key: ''
+
+  aws_s3_access_key_id: ''
+  aws_s3_secret_access_key: ''
+  aws_s3_region: ''
+  aws_s3_bucket: ''
+
+  mailgun_api_key: ''
+  mailgun_domain: ''
+  mailgun_host: ''
+
+  redis_url: 'redis://localhost:6379'
+
+  # sidekiq_dashboard_username: ''
+  # sidekiq_dashboard_password: ''
 
   development:
     secret_key_base: #{SecureRandom.hex(64)}
