@@ -41,11 +41,8 @@ create_file 'README.md', README_MD, force: true
 # Technical documentation
 [
   'docs/README.md',
-  'docs/architecture/README.md',
-  'docs/architecture/production.md',
-  'docs/architecture/staging.md',
-  'docs/architecture/environment_variables.md',
-  'docs/architecture/services.md'
+  'docs/architecture.md'
+  'docs/development_workflow.md'
 ].each do |filename|
   get("#{BASE_URL}/#{filename}", filename)
 end
