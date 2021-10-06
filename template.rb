@@ -350,6 +350,7 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
 
     redis_url: <%= Figaro.env.redis_url! %>
 
+    # ensure to switch back to <%= %> if enabling sidekiq secrets
     # sidekiq_dashboard_username: <!% Figaro.env.sidekiq_dashboard_username! %>
     # sidekiq_dashboard_password: <!% Figaro.env.sidekiq_dashboard_password! %>
   development:
