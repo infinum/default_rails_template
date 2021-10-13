@@ -157,7 +157,8 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   time bundle exec rails db:test:prepare
 
   echo "=========== bundle audit ==========="
-  time bundle exec bundle-audit check --update --quiet
+  time bundle exec bundle-audit update --quiet
+  time bundle exec bundle-audit check
 
   #############################################
   # Uncomment this if you need yarn libraries #
