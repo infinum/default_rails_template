@@ -3,6 +3,9 @@ BASE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/mas
 # Readme.md
 README_MD = <<-HEREDOC.strip_heredoc
 [![Build Status](https://docs.semaphoreci.com/essentials/status-badges/)](https://semaphoreci.com/infinum/APP)
+![Health score](https://revisor.infinum.com/api/v1/badges/add-project-key?type=health_score)
+![CVE count](https://revisor.infinum.com/api/v1/badges/add-project-key?type=cve_count)
+
 # README
 
 ## [Technical Documentation](docs/README.md)
