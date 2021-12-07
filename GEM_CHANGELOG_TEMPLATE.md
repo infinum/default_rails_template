@@ -1,7 +1,6 @@
 # Changelog
 
-## [v1.0.0](https://github.com/infinum/some-gem/tree/v-current) (YYYY-MM-DD)
-[Full Changelog](https://github.com/infinum/some-gem/compare/v-previous...v-current)
+## v1.0.0 (YYYY-MM-DD)
 
 ### Enhancements
 
