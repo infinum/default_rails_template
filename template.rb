@@ -176,6 +176,9 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   echo "=========== rubocop  ==========="
   time bundle exec rubocop --format simple
 
+  echo "=========== slim lint ==========="
+  time bundle exec slim-lint app/views
+
   echo "=========== rspec ==========="
   time bundle exec rspec
 HEREDOC
