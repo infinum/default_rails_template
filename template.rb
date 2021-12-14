@@ -179,6 +179,9 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   echo "=========== rubocop  ==========="
   time bundle exec rubocop --format simple
 
+  echo "=========== slim lint ==========="
+  time bundle exec slim-lint app/views
+
   echo "=========== rspec ==========="
   time bundle exec rspec
 HEREDOC
@@ -304,6 +307,7 @@ append_to_file 'Gemfile' do
       gem 'brakeman', require: false
       gem 'bundler-audit', require: false
       gem 'rubocop-infinum', require: false
+      gem 'slim_lint', require: false
     end
   HEREDOC
 end
@@ -416,6 +420,9 @@ create_file 'config/application.yml', FIGARO_FILE
 # Rubocop
 get("#{BASE_URL}/.rubocop.yml", '.rubocop.yml')
 
+# Slim lint
+get("#{BASE_URL}/.slim-lint.yml", '.slim-lint.yml')
+
 # Mina
 get("#{BASE_URL}/mina_deploy.rb", 'config/deploy.rb')
 
@@ -441,6 +448,11 @@ PreCommit:
     enabled: true
     on_warn: fail
     command: ['bundle', 'exec', 'rubocop']
+
+  SlimLint:
+    enabled: true
+    on_warn: fail
+    command: ['bundle', 'exec', 'slim-lint']
 
   RailsSchemaUpToDate:
     enabled: true
