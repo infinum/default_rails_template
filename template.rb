@@ -263,16 +263,17 @@ HEREDOC
 create_file 'config/initializers/bugsnag.rb', BUGSNAG_CONFIG
 
 # Remove gems we don't use.
-%w(coffee-rails jbuilder tzinfo-data byebug).each do |unwanted_gem|
-  gsub_file('Gemfile', /gem '#{unwanted_gem}'.*\n/, '')
+%w(jbuilder tzinfo-data byebug web-console).each do |unwanted_gem|
+  gsub_file('Gemfile', /gem "#{unwanted_gem}".*\n/, '')
 end
 
 # Remove comments from the Gemfile
 gsub_file('Gemfile', /^\s*#+.*\n/, '')
 
 # Add gems
-append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
+append_to_file 'Gemfile', after: /gem "rails".*\n/ do
   <<-HEREDOC.strip_heredoc
+
     gem 'bugsnag'
     gem 'figaro'
     gem 'pry-byebug'
@@ -290,6 +291,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'overcommit', require: false
   HEREDOC
 end
+# end
 
 append_to_file 'Gemfile' do
   <<-HEREDOC.strip_heredoc
@@ -321,9 +323,7 @@ append_to_file 'Gemfile' do
   HEREDOC
 end
 
-append_to_file 'config/environments/development.rb', after: 'Rails.application.configure do' do
-  <<-HEREDOC
-
+environment <<~HEREDOC, env: 'development'
   config.action_mailer.delivery_method = :letter_opener
 
   config.after_initialize do
@@ -331,8 +331,7 @@ append_to_file 'config/environments/development.rb', after: 'Rails.application.c
     Bullet.rails_logger = true
     Bullet.add_footer = true
   end
-  HEREDOC
-end
+HEREDOC
 
 # Stop crawlers
 append_to_file 'public/robots.txt' do 
@@ -510,7 +509,7 @@ CODEOWNERS_FILE = <<-HEREDOC.strip_heredoc
 # For more info about the file read https://help.github.com/en/articles/about-code-owners
 
 # Set default PR reviewers. For example:
-# * @d4be4st @melcha @nikone
+# * @nikajukic @melcha @cilim
 HEREDOC
 
 create_file '.github/CODEOWNERS', CODEOWNERS_FILE
@@ -572,9 +571,6 @@ append_file 'db/seeds.rb', SEEDS_ENABLE_IGNORE
 
 # Finish
 
-# set latest ruby version as local
-run 'rbenv local $(rbenv global)'
-
 ## Bundle install
 run 'bundle install'
 
@@ -582,18 +578,8 @@ run 'bundle install'
 run 'bundle exec secrets init'
 
 ## Initialize rspec
-run 'bundle exec rails generate rspec:install'
-
-## Initialize spring
-if yes?('Install spring? [No]', :green)
-  append_to_file 'Gemfile', after: "group :development do\n" do
-    <<-HEREDOC
-    gem 'spring-commands-rspec'
-    HEREDOC
-  end
-  run 'bundle install'
-  run 'bundle exec spring binstub --all'
-end
+rails_command 'generate rspec:install'
+run 'bundle binstubs rspec-core'
 
 ## Ask about default PR reviewers
 default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @d4be4st @melcha @nikone. Default reviewers:', :green)
@@ -604,7 +590,7 @@ append_to_file '.github/CODEOWNERS' do
 end
 
 # add annotate task file and ignore its rubocop violations
-run 'bundle exec rails generate annotate:install'
+rails_command 'generate annotate:install'
 ANNOTATE_TASK_FILE = 'lib/tasks/auto_annotate_models.rake'
 prepend_file ANNOTATE_TASK_FILE, "# frozen_string_literal: true\n\n"
 append_to_file ANNOTATE_TASK_FILE, after: "its thing in production.\n" do
@@ -622,4 +608,4 @@ run 'overcommit --sign'
 run 'overcommit --sign pre-push'
 
 # Fix default rubocop errors
-run 'bundle exec rubocop -a'
+run 'bundle exec rubocop -A'
