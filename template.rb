@@ -335,9 +335,9 @@ append_to_file 'config/environments/development.rb', after: 'Rails.application.c
 end
 
 # Stop crawlers
-append_to_file 'public/robots.txt' do 
+append_to_file 'public/robots.txt' do
   <<-HEREDOC.strip_heredoc
-  # no bot may crawl 
+  # no bot may crawl
   User-agent: *
   Disallow: /
   HEREDOC

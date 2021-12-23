@@ -23,7 +23,7 @@
 <!-- DEVOPS -->
 <!-- if exists
 ## Devops wiki
-[wiki](https://devops-wiki.infinum.co/books/projects/chapter/APP) 
+[wiki](https://devops-wiki.infinum.co/books/projects/chapter/APP)
 -->
 
 ## Application
