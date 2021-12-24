@@ -186,6 +186,7 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   time bundle exec rspec
 HEREDOC
 create_file 'bin/build', BIN_BUILD, force: true
+chmod 'bin/build', 0755, verbose: false
 
 BIN_DEPLOY = <<~HEREDOC.strip_heredoc
   #!/usr/bin/env bash
@@ -228,6 +229,7 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
   # fi
 HEREDOC
 create_file 'bin/deploy', BIN_DEPLOY, force: true
+chmod 'bin/deploy', 0755, verbose: false
 
 # bundler config
 BUNDLER_CI_BUILD_CONFIG = <<~HEREDOC.strip_heredoc
