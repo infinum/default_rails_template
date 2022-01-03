@@ -135,55 +135,67 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
 HEREDOC
 create_file 'bin/update', BIN_UPDATE, force: true
 
-BIN_BUILD = <<~HEREDOC.strip_heredoc
+BIN_PREPARE_CI = <<~HEREDOC.strip_heredoc
   #!/usr/bin/env bash
 
   set -o errexit
   set -o pipefail
   set -o nounset
 
-  echo "=========== setting env variables ==========="
-  export RAILS_ENV='test'
-  export BUNDLE_APP_CONFIG='.bundle/ci-build'
+  echo "=========== pull secrets ==========="
+  bundle exec secrets pull -e development -y
+HEREDOC
+create_file 'bin/prepare_ci', BIN_PREPARE_CI, force: true
+chmod 'bin/prepare_ci', 0755, verbose: false
 
-  echo "=========== install bundler ==========="
-  bundler_version=`tail -n 1 Gemfile.lock | xargs`
-  time gem install bundler:$bundler_version --no-document
+BIN_AUDIT = <<~HEREDOC.strip_heredoc
+  #!/usr/bin/env bash
 
-  echo "=========== bundle install ==========="
-  time bundle install
-
-  echo "=========== secrets pull ============="
-  time bundle exec secrets pull -e development -y
-
-  echo "=========== rails db:test:prepare ==========="
-  time bundle exec rails db:test:prepare
+  set -o errexit
+  set -o pipefail
+  set -o nounset
 
   echo "=========== bundle audit ==========="
   time bundle exec bundle-audit update --quiet
   time bundle exec bundle-audit check
 
-  #############################################
-  # Uncomment this if you need yarn libraries #
-  # for running your tests                    #
-  #############################################
-  # echo "=========== yarn install ==========="
-  # time yarn install
+  echo "=========== brakeman ==========="
+  time bundle exec brakeman -q --color
+HEREDOC
+create_file 'bin/audit', BIN_AUDIT, force: true
+chmod 'bin/audit', 0755, verbose: false
+
+BIN_LINT = <<~HEREDOC.strip_heredoc
+  #!/usr/bin/env bash
+
+  set -o errexit
+  set -o pipefail
+  set -o nounset
 
   echo "=========== zeitwerk check ==========="
   time bundle exec rails zeitwerk:check
 
-  echo "=========== brakeman ==========="
-  time bundle exec brakeman -q
-
   echo "=========== rubocop  ==========="
-  time bundle exec rubocop --format simple
+  time bundle exec rubocop --format simple --format github --color --parallel
+HEREDOC
+create_file 'bin/lint', BIN_LINT, force: true
+chmod 'bin/lint', 0755, verbose: false
+
+BIN_TEST = <<~HEREDOC.strip_heredoc
+  #!/usr/bin/env bash
+
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+
+  echo "=========== rails db:test:prepare ==========="
+  time RAILS_ENV=test bundle exec rails db:test:prepare
 
   echo "=========== rspec ==========="
-  time bundle exec rspec
+  time bundle exec rspec --force-color
 HEREDOC
-create_file 'bin/build', BIN_BUILD, force: true
-chmod 'bin/build', 0755, verbose: false
+create_file 'bin/test', BIN_TEST, force: true
+chmod 'bin/test', 0755, verbose: false
 
 BIN_DEPLOY = <<~HEREDOC.strip_heredoc
   #!/usr/bin/env bash
@@ -194,18 +206,11 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
 
   echo "=========== setting env variables ==========="
   environment=$1
-  export RAILS_ENV='test'
-  export BUNDLE_APP_CONFIG='.bundle/ci-deploy'
-
-  echo "=========== install bundler ==========="
-  bundler_version=`tail -n 1 Gemfile.lock | xargs`
-  time gem install bundler:$bundler_version --no-document
-
-  echo "=========== bundle install ==========="
-  time bundle install
 
   echo "=========== mina deploy =============="
-  time bundle exec mina $environment ssh_keyscan_domain setup deploy
+  time bundle exec mina $environment ssh_keyscan_domain
+  time bundle exec mina $environment setup
+  time bundle exec mina $environment deploy
 
   #############################################
   # Uncomment this if you need to publish dox #
@@ -227,6 +232,10 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
 HEREDOC
 create_file 'bin/deploy', BIN_DEPLOY, force: true
 chmod 'bin/deploy', 0755, verbose: false
+
+# get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
+# get("#{BASE_URL}/deploy-staging.yml", '.github/workflows/deploy-staging.yml')
+# get("#{BASE_URL}/deploy-production.yml", '.github/workflows/deploy-production.yml')
 
 # bundler config
 BUNDLER_CI_BUILD_CONFIG = <<~HEREDOC.strip_heredoc
@@ -578,6 +587,10 @@ if yes?('Will this application have a frontend? [No]', :green)
 
   get("#{BASE_URL}/.slim-lint.yml", '.slim-lint.yml')
 
+  node_version = `node -v`.chomp.sub('v', '')
+
+  create_file '.node-version', node_version
+
   PACKAGE_JSON_FILE = <<~HEREDOC
     {
       "name": "#{app_name}",
@@ -592,6 +605,9 @@ if yes?('Will this application have a frontend? [No]', :green)
       },
       "eslintConfig": {
         "extends": "@infinumrails/eslint-config-js"
+      },
+      "engines": {
+        "node": "#{node_version}"
       }
     }
   HEREDOC
@@ -634,7 +650,7 @@ if yes?('Will this application have a frontend? [No]', :green)
 
   create_file '.stylelintignore', STYLELINTIGNORE_FILE
 
-  append_to_file 'bin/build', after: "time bundle exec rubocop --format simple\n" do
+  append_to_file 'bin/lint' do
     <<~HEREDOC
 
       echo "=========== slim lint ==========="
@@ -649,6 +665,8 @@ if yes?('Will this application have a frontend? [No]', :green)
   end
 
   run 'yarn add --dev @infinumrails/eslint-config-js @infinumrails/stylelint-config-scss eslint postcss stylelint'
+
+  gsub_file('.github/workflows/build.yml', /^.*use_node: false.*\n/, '')
 end
 
 ## Ask about default PR reviewers
@@ -658,6 +676,13 @@ append_to_file '.github/CODEOWNERS' do
   * #{default_reviewers}
   HEREDOC
 end
+
+## Users allowed to manually trigger deploys
+staging_deployers = ask('Who can manually trigger a deploy to staging? (Example: @username1 @username2)', :green)
+gsub_file('.github/workflows/deploy-staging.yml', 'DEPLOY USERS GO HERE', staging_deployers)
+
+production_deployers = ask('Who can manually trigger a deploy to production? (Example: @username1 @username2)', :green)
+gsub_file('.github/workflows/deploy-production.yml', 'DEPLOY USERS GO HERE', production_deployers)
 
 # add annotate task file and ignore its rubocop violations
 rails_command 'generate annotate:install'

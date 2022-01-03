@@ -1,0 +1,17 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+    name: Build
+    uses: infinum/default_rails_template/.github/workflows/build.yml@v1
+    with:
+      postgres_image: '13.2'
+      use_node: false
+      ci_steps: 'bin/audit bin/lint bin/test'
+    secrets:
+      VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+      VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
+      VAULT_AUTH_USER_ID: ${{ secrets.VAULT_AUTH_USER_ID }}
+      VAULT_AUTH_APP_ID: ${{ secrets.VAULT_AUTH_APP_ID }}

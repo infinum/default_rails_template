@@ -1,0 +1,62 @@
+name: Deploy
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+on:
+  workflow_call:
+    inputs:
+      # Sets the Mina environment (e.g. staging, production)
+      # A task by the same name must exist in config/deploy.rb
+      environment:
+        required: true
+        type: string
+
+      # Sets the Git branch which will be checked out
+      branch:
+        required: true
+        type: string
+
+      # Determines who can manually trigger the workflow
+      # Example: "@github_username1 @github_username2"
+      # See: https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
+      deployers:
+        required: false
+        type: string
+        default: ''
+
+      # Sets BUNDLE_APP_CONFIG environment variable
+      # See: https://bundler.io/man/bundle-config.1.html
+      bundle_app_config:
+        required: false
+        type: string
+        default: .bundle/ci-deploy
+
+      # Selects the runner on which the workflow will run
+      # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      runner:
+        required: false
+        type: string
+        default: ubuntu-20.04
+    secrets:
+      SSH_PRIVATE_KEY:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ${{ inputs.runner }}
+    env:
+      BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
+    if: ${{ github.event_name == 'workflow_dispatch' && contains(inputs.deployers, format('@{0}', github.actor)) || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.branch }}
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - run: bin/deploy ${{ inputs.environment }}

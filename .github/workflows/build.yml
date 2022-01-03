@@ -1,0 +1,107 @@
+name: Build
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      # Selects the version of Postgres for running tests
+      # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#supported-tags-and-respective-dockerfile-links
+      postgres_image:
+        required: true
+        type: string
+
+      # Determines whether to install Node and run `yarn install`
+      use_node:
+        required: false
+        type: boolean
+        default: true
+
+      # Sets BUNDLE_APP_CONFIG environment variable
+      # See: https://bundler.io/man/bundle-config.1.html
+      bundle_app_config:
+        required: false
+        type: string
+        default: .bundle/ci-build
+
+      # Selects the runner on which the workflow will run
+      # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      runner:
+        required: false
+        type: string
+        default: ubuntu-20.04
+
+      # Defines which scripts will run on CI
+      # Format: space-delimited paths to scripts
+      # Example: 'bin/audit bin/lint bin/test'
+      ci_steps:
+        required: true
+        type: string
+    secrets:
+      VAULT_ADDR:
+        required: true
+      VAULT_AUTH_METHOD:
+        required: true
+      VAULT_AUTH_USER_ID:
+        required: true
+      VAULT_AUTH_APP_ID:
+        required: true
+
+jobs:
+  build:
+    name: 'Build'
+    runs-on: ${{ inputs.runner }}
+    env:
+      BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
+      RUBOCOP_CACHE_ROOT: .rubocop-cache
+    services:
+      postgres:
+        image: postgres:${{ inputs.postgres_image }}
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: --name=postgres
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Prepare RuboCop cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.RUBOCOP_CACHE_ROOT }}
+          key: ${{ runner.os }}-rubocop-cache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-rubocop-cache-
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        if: ${{ inputs.use_node }}
+        with:
+          node-version-file: '.node-version'
+      - name: Prepare node_modules cache
+        uses: actions/cache@v2
+        if: ${{ inputs.use_node }}
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
+      - name: Install JS packages
+        if: ${{ inputs.use_node }}
+        run: yarn install --frozen-lockfile
+      - name: Prepare CI
+        run: bin/prepare_ci
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
+          VAULT_AUTH_USER_ID: ${{ secrets.VAULT_AUTH_USER_ID }}
+          VAULT_AUTH_APP_ID: ${{ secrets.VAULT_AUTH_APP_ID }}
+      - name: Wait for Postgres to be ready
+        run: until docker exec postgres pg_isready; do sleep 1; done
+      - name: CI steps
+        run: 'parallel --lb -k -j0 ::: ${{ inputs.ci_steps }}'
