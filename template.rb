@@ -179,9 +179,6 @@ BIN_BUILD = <<~HEREDOC.strip_heredoc
   echo "=========== rubocop  ==========="
   time bundle exec rubocop --format simple
 
-  echo "=========== slim lint ==========="
-  time bundle exec slim-lint app/views
-
   echo "=========== rspec ==========="
   time bundle exec rspec
 HEREDOC
@@ -273,7 +270,7 @@ end
 gsub_file('Gemfile', /^\s*#+.*\n/, '')
 
 # Add gems
-append_to_file 'Gemfile', after: /gem 'rails'.*\n/ do
+append_to_file 'Gemfile', after: /gem "rails".*\n/ do
   <<-HEREDOC.strip_heredoc
     gem 'bugsnag'
     gem 'figaro'
@@ -309,7 +306,6 @@ append_to_file 'Gemfile' do
       gem 'brakeman', require: false
       gem 'bundler-audit', require: false
       gem 'rubocop-infinum', require: false
-      gem 'slim_lint', require: false
     end
   HEREDOC
 end
@@ -422,9 +418,6 @@ create_file 'config/application.yml', FIGARO_FILE
 # Rubocop
 get("#{BASE_URL}/.rubocop.yml", '.rubocop.yml')
 
-# Slim lint
-get("#{BASE_URL}/.slim-lint.yml", '.slim-lint.yml')
-
 # Mina
 get("#{BASE_URL}/mina_deploy.rb", 'config/deploy.rb')
 
@@ -450,11 +443,6 @@ PreCommit:
     enabled: true
     on_warn: fail
     command: ['bundle', 'exec', 'rubocop']
-
-  SlimLint:
-    enabled: true
-    on_warn: fail
-    command: ['bundle', 'exec', 'slim-lint']
 
   RailsSchemaUpToDate:
     enabled: true
@@ -595,6 +583,93 @@ if yes?('Install spring? [No]', :green)
   end
   run 'bundle install'
   run 'bundle exec spring binstub --all'
+end
+
+## Frontend
+if yes?('Will this application have a frontend? [No]', :green)
+  append_to_file 'Gemfile', after: "gem 'secrets_cli', require: false\n" do
+    "gem 'slim'\n"
+  end
+
+  append_to_file 'Gemfile', after: " gem 'rubocop-infinum', require: false\n" do
+    "    gem 'slim_lint', require: false\n"
+  end
+
+  run 'bundle install'
+
+  get("#{BASE_URL}/.slim-lint.yml", '.slim-lint.yml')
+
+  PACKAGE_JSON_FILE = <<~HEREDOC
+    {
+      "name": "#{app_name}",
+      "private": true,
+      "version": "0.1.0",
+      "scripts": {
+        "lint-css": "stylelint",
+        "lint-js": "eslint"
+      },
+      "stylelint": {
+        "extends": "@infinumrails/stylelint-config-scss"
+      },
+      "eslintConfig": {
+        "extends": "@infinumrails/eslint-config-js"
+      }
+    }
+  HEREDOC
+
+  create_file 'package.json', PACKAGE_JSON_FILE
+
+  append_to_file '.overcommit.yml', after: "command: ['bundle', 'exec', 'rubocop']\n" do
+    <<-HEREDOC
+
+  SlimLint:
+    enabled: true
+    on_warn: fail
+    command: ['bundle', 'exec', 'slim-lint']
+
+  EsLint:
+    enabled: true
+    on_warn: fail
+    required_executable: 'yarn'
+    command: ['yarn', 'lint-js']
+
+  Stylelint:
+    enabled: true
+    on_warn: fail
+    required_executable: 'node_modules/.bin/stylelint'
+    command: ['node_modules/.bin/stylelint']
+    HEREDOC
+  end
+
+  append_to_file '.gitignore' do
+    <<~HEREDOC
+      node_modules
+    HEREDOC
+  end
+
+  STYLELINTIGNORE_FILE = <<~HEREDOC
+    *.*
+    !app/assets/**/*.css
+    !app/assets/**/*.scss
+  HEREDOC
+
+  create_file '.stylelintignore', STYLELINTIGNORE_FILE
+
+  append_to_file 'bin/build', after: "time bundle exec rubocop --format simple\n" do
+    <<~HEREDOC
+
+      echo "=========== slim lint ==========="
+      time bundle exec slim-lint app/views
+
+      echo "=========== JS lint ==========="
+      time yarn lint-js app
+
+      echo "=========== CSS lint ==========="
+      time yarn lint-css --allow-empty-input app
+    HEREDOC
+  end
+
+  run 'yarn add --dev @infinumrails/eslint-config-js @infinumrails/stylelint-config-scss eslint postcss stylelint'
 end
 
 ## Ask about default PR reviewers
