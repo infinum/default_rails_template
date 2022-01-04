@@ -33,7 +33,7 @@ task :deploy do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install_gem'
-    command "export BUNDLER_APP_CONFIG='.bundle/server'"
+    command "export BUNDLE_APP_CONFIG='.bundle/server'"
     invoke :'bundle:install'
     command 'yarn install'
     invoke :'secrets:pull'
