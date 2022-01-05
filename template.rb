@@ -194,7 +194,6 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
 
   echo "=========== setting env variables ==========="
   environment=$1
-  export RAILS_ENV='test'
   export BUNDLE_APP_CONFIG='.bundle/ci-deploy'
 
   echo "=========== install bundler ==========="
