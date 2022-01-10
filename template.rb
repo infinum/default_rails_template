@@ -245,13 +245,6 @@ BUNDLER_CI_DEPLOY_CONFIG = <<~HEREDOC.strip_heredoc
 HEREDOC
 create_file '.bundle/ci-deploy/config', BUNDLER_CI_DEPLOY_CONFIG, force: true
 
-BUNDLER_SERVER_CONFIG = <<~HEREDOC.strip_heredoc
-  ---
-  BUNDLE_DEPLOYMENT: "true"
-  BUNDLE_WITHOUT: "development test ci deploy"
-HEREDOC
-create_file '.bundle/server/config', BUNDLER_SERVER_CONFIG, force: true
-
 # bugsnag
 BUGSNAG_CONFIG = <<-HEREDOC.strip_heredoc
   Bugsnag.configure do |config|
