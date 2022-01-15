@@ -23,6 +23,22 @@ then run if needed:
   rbenv global #{latest_ruby}
 ```
 
+### GitHub Actions
+
+This template uses GitHub Actions for CI/CD. In order for workflows to work properly some [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) have to be set up.
+
+For build workflow to work, the following secrets must exist (usually set up by DevOps):
+- `VAULT_ADDR`
+- `VAULT_AUTH_METHOD`
+- `VAULT_AUTH_USER_ID`
+- `VAULT_AUTH_APP_ID`
+
+For deploy workflows, you need to generate private/public SSH key pairs for each environment. Public key should be added to the server to which you're deploying. Private key should be added as a secret to GitHub and named `SSH_PRIVATE_KEY_#{ENVIRONMENT}`, where `ENVIRONMENT` is replaced with an appropriate environment name (`STAGING`, `PRODUCTION`, etc.).
+
+### Frontend
+
+If your application will have a frontend (the template will ask you that), you must have Node installed on your machine. The template creates a `.node-version` file with the Node version set to the version you're currently running (check by executing `node -v`). Therefore, ensure that you have the latest [Active LTS](https://nodejs.org/en/about/releases/) version of Node running on your machine before using the template.
+
 ## Usage
 
 ```shell

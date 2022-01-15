@@ -1,0 +1,19 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Build]
+    branches: [staging]
+    types: [completed]
+
+jobs:
+  deploy:
+    name: Deploy
+    uses: infinum/default_rails_template/.github/workflows/deploy.yml@v1
+    with:
+      environment: staging
+      branch: staging
+      deployers: 'DEPLOY USERS GO HERE' # Example: '@github_username1 @github_username2'
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}

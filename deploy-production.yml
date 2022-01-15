@@ -1,0 +1,19 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+  # workflow_run: # UNCOMMENT THIS IF YOU WANT AUTOMATIC PRODUCTION DEPLOYS
+  #   workflows: [Build]
+  #   branches: [master]
+  #   types: [completed]
+
+jobs:
+  deploy:
+    name: Deploy
+    uses: infinum/default_rails_template/.github/workflows/deploy.yml@v1
+    with:
+      environment: production
+      branch: master
+      deployers: 'DEPLOY USERS GO HERE' # Example: '@github_username1 @github_username2'
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
