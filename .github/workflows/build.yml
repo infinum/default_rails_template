@@ -44,9 +44,9 @@ on:
         required: true
       VAULT_AUTH_METHOD:
         required: true
-      VAULT_AUTH_USER_ID:
+      VAULT_AUTH_ROLE_ID:
         required: true
-      VAULT_AUTH_APP_ID:
+      VAULT_AUTH_SECRET_ID:
         required: true
 
 jobs:
