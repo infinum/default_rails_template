@@ -30,8 +30,8 @@ This template uses GitHub Actions for CI/CD. In order for workflows to work prop
 For build workflow to work, the following secrets must exist (usually set up by DevOps):
 - `VAULT_ADDR`
 - `VAULT_AUTH_METHOD`
-- `VAULT_AUTH_USER_ID`
-- `VAULT_AUTH_APP_ID`
+- `VAULT_AUTH_ROLE_ID`
+- `VAULT_AUTH_SECRET_ID`
 
 For deploy workflows, you need to generate private/public SSH key pairs for each environment. Public key should be added to the server to which you're deploying. Private key should be added as a secret to GitHub and named `SSH_PRIVATE_KEY_#{ENVIRONMENT}`, where `ENVIRONMENT` is replaced with an appropriate environment name (`STAGING`, `PRODUCTION`, etc.).
 
