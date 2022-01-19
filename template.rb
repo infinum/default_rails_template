@@ -224,7 +224,7 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
   #   time yarn install
 
   #   echo "=========== rails db:test:prepare ==========="
-  #   time bundle exec rails db:test:prepare
+  #   time RAILS_ENV=test bundle exec rails db:test:prepare
 
   #   echo "=========== mina dox publish ==========="
   #   time bundle exec mina $environment dox:publish
