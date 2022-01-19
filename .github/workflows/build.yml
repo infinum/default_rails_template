@@ -105,3 +105,5 @@ jobs:
         run: until docker exec postgres pg_isready; do sleep 1; done
       - name: CI steps
         run: 'parallel --lb -k -j0 ::: ${{ inputs.ci_steps }}'
+        env:
+          RAILS_ENV: test
