@@ -17,7 +17,3 @@ jobs:
       deployers: 'DEPLOY USERS GO HERE' # Example: '@github_username1 @github_username2'
     secrets:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-      VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
-      VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
-      VAULT_AUTH_ROLE_ID: ${{ secrets.VAULT_AUTH_ROLE_ID }}
-      VAULT_AUTH_SECRET_ID: ${{ secrets.VAULT_AUTH_SECRET_ID }}
