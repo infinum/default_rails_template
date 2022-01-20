@@ -41,6 +41,14 @@ on:
     secrets:
       SSH_PRIVATE_KEY:
         required: true
+      VAULT_ADDR:
+        required: true
+      VAULT_AUTH_METHOD:
+        required: true
+      VAULT_AUTH_ROLE_ID:
+        required: true
+      VAULT_AUTH_SECRET_ID:
+        required: true
 
 jobs:
   deploy:
@@ -60,3 +68,8 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - run: bin/deploy ${{ inputs.environment }}
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
+          VAULT_AUTH_ROLE_ID: ${{ secrets.VAULT_AUTH_ROLE_ID }}
+          VAULT_AUTH_SECRET_ID: ${{ secrets.VAULT_AUTH_SECRET_ID }}
