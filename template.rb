@@ -501,7 +501,7 @@ CODEOWNERS_FILE = <<-HEREDOC.strip_heredoc
 # For more info about the file read https://help.github.com/en/articles/about-code-owners
 
 # Set default PR reviewers. For example:
-# * @nikajukic @melcha @cilim
+# * @github_username1 @github_username2
 HEREDOC
 
 create_file '.github/CODEOWNERS', CODEOWNERS_FILE
@@ -670,7 +670,7 @@ if yes?('Will this application have a frontend? [No]', :green)
 end
 
 ## Ask about default PR reviewers
-default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @d4be4st @melcha @nikone. Default reviewers:', :green)
+default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @github_username1 @github_username2. Default reviewers:', :green)
 append_to_file '.github/CODEOWNERS' do
   <<~HEREDOC
   * #{default_reviewers}
