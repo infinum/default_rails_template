@@ -235,6 +235,7 @@ BIN_PUBLISH_DOCS = <<~HEREDOC.strip_heredoc
   #   time bundle exec rails db:test:prepare
   #
   #   echo "=========== mina dox publish ==========="
+  #   time bundle exec mina $environment ssh_keyscan_domain
   #   time bundle exec mina $environment dox:publish
   # fi
 HEREDOC
