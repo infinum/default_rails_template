@@ -242,9 +242,9 @@ HEREDOC
 create_file 'bin/publish_docs', BIN_PUBLISH_DOCS, force: true
 chmod 'bin/publish_docs', 0755, verbose: false
 
-# get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
-# get("#{BASE_URL}/deploy-staging.yml", '.github/workflows/deploy-staging.yml')
-# get("#{BASE_URL}/deploy-production.yml", '.github/workflows/deploy-production.yml')
+get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
+get("#{BASE_URL}/deploy-staging.yml", '.github/workflows/deploy-staging.yml')
+get("#{BASE_URL}/deploy-production.yml", '.github/workflows/deploy-production.yml')
 
 # bundler config
 BUNDLER_CI_BUILD_CONFIG = <<~HEREDOC.strip_heredoc
