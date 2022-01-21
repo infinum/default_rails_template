@@ -211,27 +211,35 @@ BIN_DEPLOY = <<~HEREDOC.strip_heredoc
   time bundle exec mina $environment ssh_keyscan_domain
   time bundle exec mina $environment setup
   time bundle exec mina $environment deploy
+HEREDOC
+create_file 'bin/deploy', BIN_DEPLOY, force: true
+chmod 'bin/deploy', 0755, verbose: false
+
+BIN_PUBLISH_DOCS = <<~HEREDOC.strip_heredoc
+  #!/usr/bin/env bash
+
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+
+  echo "=========== setting env variables ==========="
+  environment=$1
 
   #############################################
   # Uncomment this if you need to publish dox #
   # Delete not needed environment             #
   #############################################
+  #
   # if [[ $environment =~ ^(production|uat|staging)$ ]]; then
-  #   echo "=========== secrets pull =============="
-  #   time bundle exec secrets pull -e development -y
-
-  #   echo "=========== yarn install =============="
-  #   time yarn install
-
   #   echo "=========== rails db:test:prepare ==========="
-  #   time RAILS_ENV=test bundle exec rails db:test:prepare
-
+  #   time bundle exec rails db:test:prepare
+  #
   #   echo "=========== mina dox publish ==========="
   #   time bundle exec mina $environment dox:publish
   # fi
 HEREDOC
-create_file 'bin/deploy', BIN_DEPLOY, force: true
-chmod 'bin/deploy', 0755, verbose: false
+create_file 'bin/publish_docs', BIN_PUBLISH_DOCS, force: true
+chmod 'bin/publish_docs', 0755, verbose: false
 
 # get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
 # get("#{BASE_URL}/deploy-staging.yml", '.github/workflows/deploy-staging.yml')
