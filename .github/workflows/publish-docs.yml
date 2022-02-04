@@ -32,6 +32,12 @@ on:
       environment:
         required: true
         type: string
+
+      # Sets the Git branch which will be checked out
+      branch:
+        required: true
+        type: string
+
     secrets:
       SSH_PRIVATE_KEY:
         required: true
@@ -61,6 +67,8 @@ jobs:
     steps:
       - name: Git checkout
         uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.branch }}
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:

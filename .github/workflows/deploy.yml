@@ -50,13 +50,17 @@ jobs:
       BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
     if: ${{ github.event_name == 'workflow_dispatch' && contains(inputs.deployers, format('@{0}', github.actor)) || github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Git checkout
+        uses: actions/checkout@v2
         with:
           ref: ${{ inputs.branch }}
-      - uses: ruby/setup-ruby@v1
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - uses: webfactory/ssh-agent@v0.5.4
+      - name: Prepare SSH agent
+        uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - run: bin/deploy ${{ inputs.environment }}
+      - name: Deploy
+        run: bin/deploy ${{ inputs.environment }}

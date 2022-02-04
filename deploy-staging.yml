@@ -25,6 +25,7 @@ jobs:
   #   with:
   #     postgres_image: '13.2'
   #     environment: staging
+  #     branch: staging
   #   secrets:
   #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
   #     VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
