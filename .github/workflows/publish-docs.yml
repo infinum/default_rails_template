@@ -50,6 +50,12 @@ on:
       VAULT_AUTH_SECRET_ID:
         required: true
 
+      # Additional environment variables set in the workflow
+      # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
+      # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }' 
+      ADDITIONAL_VARIABLES:
+        required: false
+
 jobs:
   publish_docs:
     name: 'Publish docs'
@@ -65,6 +71,18 @@ jobs:
           - 5432:5432
         options: --name=postgres
     steps:
+      - name: Set up additional environment variables
+        env:
+          ADDITIONAL_VARIABLES: ${{ secrets.ADDITIONAL_VARIABLES }}
+        if: ${{ env.ADDITIONAL_VARIABLES }}
+        run: >
+          if echo '${{ env.ADDITIONAL_VARIABLES }}' | jq >/dev/null 2>&1; then
+            echo '${{ env.ADDITIONAL_VARIABLES }}' | jq -r 'to_entries[] | "\(.key) \(.value)"' | \
+              while read -r key value; do echo "$key=$value" >> $GITHUB_ENV && echo "Variable $key has been set"; done
+          else
+            echo "ADDITIONAL_VARIABLES secret you supplied is not a valid JSON object. Check the formatting of the secret."
+            exit 1
+          fi
       - name: Git checkout
         uses: actions/checkout@v2
         with:
