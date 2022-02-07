@@ -109,6 +109,7 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Prepare CI
         run: bin/prepare_ci
+        if: hashFiles('bin/prepare_ci') != ''
         env:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
           VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
