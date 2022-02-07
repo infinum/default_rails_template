@@ -15,10 +15,13 @@ jobs:
       environment: staging
       branch: staging
       deployers: 'DEPLOY USERS GO HERE' # Example: '@github_username1 @github_username2'
+      # slack_notification_channel: 'slack-channel-name-without-hash-symbol' # UNCOMMENT THIS IF YOU WANT SLACK NOTIFICATIONS, DELETE OTHERWISE
+      # notify_on: 'all' # Possible values: 'success', 'failure', or 'all'
     secrets:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+      # SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }} # UNCOMMENT THIS IF YOU WANT SLACK NOTIFICATIONS, DELETE OTHERWISE
 
-  # publish_docs: # UNCOMMENT THIS IF YOU USE DOX FOR API DOCUMENTATION
+  # publish_docs: # UNCOMMENT THIS IF YOU USE DOX FOR API DOCUMENTATION, DELETE OTHERWISE
   #   name: Publish docs
   #   needs: [deploy]
   #   uses: infinum/default_rails_template/.github/workflows/publish-docs.yml@v1
