@@ -19,4 +19,4 @@ jobs:
       # notify_on: 'all' # Possible values: 'success', 'failure', or 'all'
     secrets:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
-      # SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }} # UNCOMMENT THIS IF YOU WANT SLACK NOTIFICATIONS, DELETE OTHERWISE
+      # SLACK_BOT_TOKEN: ${{ secrets.RAILS_TEAM_SLACK_BOT_TOKEN }} # UNCOMMENT THIS IF YOU WANT SLACK NOTIFICATIONS, DELETE OTHERWISE
