@@ -2,7 +2,7 @@ name: Deploy production
 
 on:
   workflow_dispatch:
-  # workflow_run: # UNCOMMENT THIS IF YOU WANT AUTOMATIC PRODUCTION DEPLOYS
+  # workflow_run: # UNCOMMENT THIS IF YOU WANT AUTOMATIC PRODUCTION DEPLOYS, DELETE OTHERWISE
   #   workflows: [Build]
   #   branches: [master]
   #   types: [completed]
@@ -15,5 +15,8 @@ jobs:
       environment: production
       branch: master
       deployers: 'DEPLOY USERS GO HERE' # Example: '@github_username1 @github_username2'
+      # slack_notification_channel: 'slack-channel-name-without-hash-symbol' # UNCOMMENT THIS IF YOU WANT SLACK NOTIFICATIONS, DELETE OTHERWISE
+      # notify_on: 'all' # Possible values: 'success', 'failure', or 'all'
     secrets:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
+      # SLACK_BOT_TOKEN: ${{ secrets.RAILS_TEAM_SLACK_BOT_TOKEN }} # UNCOMMENT THIS IF YOU WANT SLACK NOTIFICATIONS, DELETE OTHERWISE

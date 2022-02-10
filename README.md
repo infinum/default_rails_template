@@ -35,6 +35,14 @@ For build workflow to work, the following secrets must exist (usually set up by 
 
 For deploy workflows, you need to generate private/public SSH key pairs for each environment. Public key should be added to the server to which you're deploying. Private key should be added as a secret to GitHub and named `SSH_PRIVATE_KEY_#{ENVIRONMENT}`, where `ENVIRONMENT` is replaced with an appropriate environment name (`STAGING`, `PRODUCTION`, etc.).
 
+#### Slack notifications
+
+Build and deploy workflows can send Slack notifications upon completion of workflow runs. To enable this, add the following to the workflow:
+- `SLACK_BOT_TOKEN` secret (you should already have this GitHub secret set up in the repo)
+- `slack_notification_channel` input with the name of the Slack channel as the value (without the # symbol)
+
+By default, a notification will be sent if the run either succeeded or failed. If you want notifications only on successful runs, add the `notify_on` input to the workflow with the value `success`. Similarily, if you want notifications only for failed runs, the value of the `notify_on` input should be `failure`. 
+
 ### Frontend
 
 If your application will have a frontend (the template will ask you that), you must have Node installed on your machine. The template creates a `.node-version` file with the Node version set to the version you're currently running (check by executing `node -v`). Therefore, ensure that you have the latest [Active LTS](https://nodejs.org/en/about/releases/) version of Node running on your machine before using the template.

@@ -38,9 +38,26 @@ on:
         required: false
         type: string
         default: ubuntu-20.04
+
+      # Defines the Slack channel to which a notification will be sent upon completion of the workflow
+      # Format: channel name (without the #)
+      # Example: 'my-channel-name'
+      slack_notification_channel:
+        required: false
+        type: string
+
+      # Defines on which events the notification is sent to the Slack channel defined in `slack_notification_channel` input
+      # By default, all events will trigger a notification
+      # Enum: success | failure | all
+      notify_on:
+        required: false
+        type: string
+        default: all
     secrets:
       SSH_PRIVATE_KEY:
         required: true
+      SLACK_BOT_TOKEN:
+        required: false
 
       # Additional environment variables set in the workflow
       # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
@@ -81,4 +98,82 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Deploy
+        id: deploy
         run: bin/deploy ${{ inputs.environment }}
+      - name: Notify on Slack
+        env:
+          SUCCESS: ${{ steps.deploy.outcome == 'success' }}
+          FAILURE: ${{ steps.deploy.outcome == 'failure' }}
+          CHANNEL: ${{ inputs.slack_notification_channel }}
+          NOTIFY_ON: ${{ inputs.notify_on }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        if: ${{ always() && inputs.slack_notification_channel }}
+        run: |
+          if [ -z "$SLACK_BOT_TOKEN" ] ; then
+            echo "SLACK_BOT_TOKEN secret is missing from the workflow!"
+            exit 1
+          fi
+
+          if [[ "$NOTIFY_ON" != "success" && "$NOTIFY_ON" != "failure" && "$NOTIFY_ON" != "all" ]] ; then
+            echo "notify_on input is not valid. Must be one of: 'success', 'failure', or 'all'"
+            exit 1
+          fi
+
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          COMMIT_MESSAGE=$(git show -s --format=%s)
+          GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+
+          if [[ "$SUCCESS" = true && ("$NOTIFY_ON" = "success" || "$NOTIFY_ON" = "all") ]] ; then
+            curl -X POST https://slack.com/api/chat.postMessage \
+                 -H "Content-type: application/json; charset=utf-8" \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 -s -S \
+                 -d @- <<- EOF
+                  {
+                    "channel": "$CHANNEL",
+                    "attachments": [
+                      {
+                        "color": "#19a974",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "$GITHUB_ACTOR <$GITHUB_RUN_URL|deployed> to *$DEPLOY_ENVIRONMENT*! :tada: \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+          EOF
+          fi
+
+          if [[ "$FAILURE" = true && ("$NOTIFY_ON" = "failure" || "$NOTIFY_ON" = "all") ]] ; then
+            curl -X POST https://slack.com/api/chat.postMessage \
+                 -H "Content-type: application/json; charset=utf-8" \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 -s -S \
+                 -d @- <<- EOF
+                  {
+                    "channel": "$CHANNEL",
+                    "attachments": [
+                      {
+                        "color": "#f75819",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "$GITHUB_ACTOR failed to <$GITHUB_RUN_URL|deploy> to *$DEPLOY_ENVIRONMENT*! :boom: \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+          EOF
+          fi
