@@ -27,6 +27,12 @@ on:
         type: string
         default: ubuntu-20.04
 
+      # Determines whether to install Node and run `yarn install`
+      use_node:
+        required: false
+        type: boolean
+        default: true
+
       # Sets the Mina environment (e.g. staging, production)
       # A task by the same name must exist in config/deploy.rb
       environment:
@@ -93,20 +99,23 @@ jobs:
           bundler-cache: true
       - name: Set up Node
         uses: actions/setup-node@v2
+        if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
       - name: Prepare node_modules cache
         uses: actions/cache@v2
+        if: ${{ inputs.use_node }}
         with:
           path: node_modules
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-modules-
+      - name: Install JS packages
+        if: ${{ inputs.use_node }}
+        run: yarn install --frozen-lockfile
       - uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Install JS packages
-        run: yarn install --frozen-lockfile
       - name: Prepare CI
         run: bin/prepare_ci
         if: hashFiles('bin/prepare_ci') != ''
