@@ -491,6 +491,9 @@ HEREDOC
 
 append_file '.gitignore', GITIGNORED_FILES
 
+# remove bundler ci config folders from gitignore
+append_to_file '.gitignore', "/*\n!/.bundle/ci-build\n!/.bundle/ci-deploy", after: '/.bundle'
+
 # .github/PULL_REQUEST_TEMPLATE.md
 PULL_REQUEST_TEMPLATE_FILE = <<-HEREDOC.strip_heredoc
 Task: [#__TASK_NUMBER__](__ADD_URL_TO_PRODUCTIVE_TASK__)
