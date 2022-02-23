@@ -225,19 +225,12 @@ BIN_PUBLISH_DOCS = <<~HEREDOC.strip_heredoc
   echo "=========== setting env variables ==========="
   environment=$1
 
-  #############################################
-  # Uncomment this if you need to publish dox #
-  # Delete not needed environment             #
-  #############################################
-  #
-  # if [[ $environment =~ ^(production|uat|staging)$ ]]; then
-  #   echo "=========== rails db:test:prepare ==========="
-  #   time bundle exec rails db:test:prepare
-  #
-  #   echo "=========== mina dox publish ==========="
-  #   time bundle exec mina $environment ssh_keyscan_domain
-  #   time bundle exec mina $environment dox:publish
-  # fi
+  echo "=========== rails db:test:prepare ==========="
+  time bundle exec rails db:test:prepare
+
+  echo "=========== mina dox publish ==========="
+  time bundle exec mina "$environment" ssh_keyscan_domain
+  time bundle exec mina "$environment" dox:publish
 HEREDOC
 create_file 'bin/publish_docs', BIN_PUBLISH_DOCS, force: true
 chmod 'bin/publish_docs', 0755, verbose: false
