@@ -674,6 +674,39 @@ if yes?('Will this application have a frontend? [No]', :green)
   gsub_file('.github/workflows/build.yml', /^.*use_node: false.*\n/, '')
 end
 
+## Docker
+unless no?('Will this application use Docker? [Yes]', :green)
+  get "#{BASE_URL}/docker/build-staging-image.yml", '.github/workflows/build-staging-image.yml'
+  get "#{BASE_URL}/docker/build-production-image.yml", '.github/workflows/build-production-image.yml'
+  get "#{BASE_URL}/docker/extract_params", 'bin/extract_params'
+  chmod 'bin/extract_params', 0755, verbose: false
+
+  inside '.docker' do
+    get "#{BASE_URL}/docker/.docker/application.yml", 'application.yml'
+    get "#{BASE_URL}/docker/.docker/Aptfile", 'Aptfile'
+    run 'touch .psqlrc'
+  end
+  get "#{BASE_URL}/docker/.dockerignore", '.dockerignore'
+  get "#{BASE_URL}/docker/docker-compose.yml", 'docker-compose.yml'
+
+  require 'bundler'
+  gsub_file 'docker-compose.yml', 'placeholder-app', app_name
+  gsub_file 'docker-compose.yml', 'RUBY_VERSION: 3.1.1', "RUBY_VERSION: #{RUBY_VERSION}"
+  gsub_file 'docker-compose.yml', 'BUNDLER_VERSION: 2.3.7', "BUNDLER_VERSION: #{Bundler::VERSION}"
+
+  if yes?('Will this application need Node runtime? [No]', :green)
+    get "#{BASE_URL}/docker/Dockerfile.with_node", 'Dockerfile'
+    node_version = `node -v`.chomp.sub('v', '')
+    node_major = node_version.scan(/^[[:digit:]]+/).first
+    append_to_file 'docker-compose.yml', <<-HEREDOC.chomp, after: /BUNDLER_VERSION: .*$/
+\n        NODE_MAJOR: #{node_major}
+        NODE_VERSION: #{node_version}
+    HEREDOC
+  else
+    get "#{BASE_URL}/docker/Dockerfile", 'Dockerfile'
+  end
+end
+
 ## Ask about default PR reviewers
 default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @github_username1 @github_username2. Default reviewers:', :green)
 append_to_file '.github/CODEOWNERS' do

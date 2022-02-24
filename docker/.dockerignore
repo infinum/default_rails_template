@@ -1,0 +1,16 @@
+.git
+.gitignore
+.git-hooks
+.github
+.DS_Store
+README.md
+/Dockerfile*
+/docker-compose.yml
+/log
+/tmp
+/node_modules
+/docs
+/storage
+# we should ignore any assets we may have built already
+public/assets
+config/application.yml

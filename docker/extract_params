@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -e
+
+TAG="git-$GITHUB_REF_NAME-$(echo $GITHUB_SHA | head -c7)"
+
+ruby_version=$(cat .ruby-version | tr -d '\r\n')
+bundler_version=$(ruby -e "require 'bundler'; puts Bundler::LockfileParser.bundled_with")
+node_version=$(cat .node-version | tr -d '\r\n')
+node_major="$(cut -d '.' -f 1 <<<"$node_version")"
+yarn_version=$(jq '.engines.yarn' package.json -r | tr -dc '[:alnum:].')
+
+echo ::set-output name=ruby_version::${ruby_version}
+echo ::set-output name=bundler_version::${bundler_version}
+echo ::set-output name=node_major::${node_major}
+echo ::set-output name=yarn_version::${yarn_version}
+
+echo ::set-output name=tagged_image::${IMAGE}:${TAG}
