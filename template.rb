@@ -676,8 +676,7 @@ end
 
 ## Docker
 unless no?('Will this application use Docker? [Yes]', :green)
-  get "#{BASE_URL}/docker/build-staging-image.yml", '.github/workflows/build-staging-image.yml'
-  get "#{BASE_URL}/docker/build-production-image.yml", '.github/workflows/build-production-image.yml'
+  get "#{BASE_URL}/docker/build-image.yml", '.github/workflows/build-image.yml'
   get "#{BASE_URL}/docker/extract_params", 'bin/extract_params'
   chmod 'bin/extract_params', 0755, verbose: false
 
