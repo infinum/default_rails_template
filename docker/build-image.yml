@@ -1,0 +1,21 @@
+name: Build, Test, & Push Docker Image
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master, staging ]
+
+jobs:
+  build_image:
+    uses: infinum/default_rails_template/.github/workflows/build-image.yml@v1
+    with:
+      postgres_image: '13.6'
+      ecs_app_service_name: 'app'
+      ecs_sidekiq_service_name: 'sidekiq'
+    secrets:
+      AWS_IAM_ACCESS_KEY_ID: ${{ secrets.AWS_IAM_ACCESS_KEY_ID }}
+      AWS_IAM_ACCESS_SECRET_KEY: ${{ secrets.AWS_IAM_ACCESS_SECRET_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ECR_REPO_URL: ${{ secrets.AWS_ECR_REPO_URL }}
+      AWS_ECR_REPO_NAME: ${{ secrets.AWS_ECR_REPO_NAME }}
+      AWS_ECS_CLUSTER_URL: ${{ secrets.AWS_ECS_CLUSTER_URL }}
+      # AWS_ECS_CLUSTER_NAME: ${{ secrets.AWS_ECS_CLUSTER_NAME }} # UNCOMMENT THIS IF YOU WANT TO OVERRIDE ECS CLUSTER NAME, DEFAULTS TO {repo_name}-{rails_env}-cluster

@@ -1,0 +1,22 @@
+secret_key_base: fake
+
+database_host: localhost
+database_username: fake
+database_password: ""
+database_name: "fake"
+database_port: "5432"
+
+sidekiq_redis_url: "redis://localhost:6379"
+sidekiq_dashboard_username: fake
+sidekiq_dashboard_password: fake
+
+aws_s3_bucket: fake
+aws_region: eu-west-1
+aws_access_key_id: fake
+aws_secret_access_key: fake
+
+bugsnag_api_key: ""
+
+mailgun_api_key: ""
+mailgun_domain: ""
+mailgun_api_host: ""

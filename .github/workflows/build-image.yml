@@ -1,0 +1,195 @@
+name: Build, Test, & Push Docker Image
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      # Selects the version of Postgres for running tests
+      # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#supported-tags-and-respective-dockerfile-links
+      postgres_image:
+        required: true
+        type: string
+
+      # Selects the runner on which the workflow will run
+      # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      runner:
+        required: false
+        type: string
+        default: ubuntu-20.04
+
+      # Set the ECS application service name
+      ecs_app_service_name:
+        required: true
+        type: string
+
+      # Set the ECS sidekiq service name
+      ecs_sidekiq_service_name:
+        required: false
+        type: string
+
+    secrets:
+      AWS_IAM_ACCESS_KEY_ID:
+        required: true
+      AWS_IAM_ACCESS_SECRET_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      AWS_ECR_REPO_URL:
+        required: true
+      AWS_ECR_REPO_NAME:
+        required: true
+      AWS_ECS_CLUSTER_URL:
+        required: true
+      AWS_ECS_CLUSTER_NAME:
+        required: false
+
+jobs:
+  build_image:
+    name: 'Build, Test, & Push Docker Image'
+    runs-on: ${{ inputs.runner }}
+
+    services:
+      postgres:
+        image: postgres:${{ inputs.postgres_image }}
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: --name=postgres
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+
+      - name: Prepare image parameters
+        id: prep
+        env:
+          AWS_ECR_REPO_URL: ${{ secrets.AWS_ECR_REPO_URL }}
+          AWS_ECR_REPO_NAME: ${{ secrets.AWS_ECR_REPO_NAME }}
+          AWS_ECS_CLUSTER_URL: ${{ secrets.AWS_ECS_CLUSTER_URL }}
+          AWS_ECS_CLUSTER_NAME: ${{ secrets.AWS_ECS_CLUSTER_NAME }}
+        run: bin/extract_params
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache test image layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-test
+          key: docker-build-test-${{ github.sha }}
+          restore-keys: docker-build-test
+
+      - name: Build test image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: Dockerfile
+          target: test
+          push: false
+          load: true
+          tags: ${{ steps.prep.outputs.tagged_image }}-test
+          build-args: |
+            RUBY_VERSION=${{ steps.prep.outputs.ruby_version }}
+            BUNDLER_VERSION=${{ steps.prep.outputs.bundler_version }}
+            NODE_MAJOR=${{ steps.prep.outputs.node_major }}
+            YARN_VERSION=${{ steps.prep.outputs.yarn_version }}
+          secret-files: |
+            app_secrets=.docker/application.yml
+          cache-from: type=local,src=/tmp/.buildx-cache-test
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-test-new
+          # ! mode=max so all stages are exported
+
+      - name: Lint
+        run: |
+          docker run --mount type=bind,src=$PWD/.docker/application.yml,dst=/app/config/application.yml \
+                       ${{ steps.prep.outputs.tagged_image }}-test \
+                     bin/lint
+
+      - name: Audit
+        run: docker run ${{ steps.prep.outputs.tagged_image }}-test bin/audit
+
+      - name: Wait for Postgres to be ready
+        run: until docker exec postgres pg_isready; do sleep 1; done
+
+      - name: Test
+        run: |
+          docker run --env DATABASE_HOST=localhost \
+                     --env DATABASE_USERNAME=postgres \
+                     --env DATABASE_PASSWORD=postgres \
+                     --network="host" \
+                     --mount type=bind,src=$PWD/.docker/application.yml,dst=/app/config/application.yml \
+                       ${{ steps.prep.outputs.tagged_image }}-test \
+                     bin/test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.5.11
+        with:
+          aws-access-key-id: ${{ secrets.AWS_IAM_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_IAM_ACCESS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Cache deploy image layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-deploy
+          key: docker-build-deploy-${{ github.sha }}
+          restore-keys: docker-build-deploy
+
+      - name: Build deploy image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: Dockerfile
+          target: deploy
+          push: true
+          tags: |
+            ${{ steps.prep.outputs.tagged_image }}
+            ${{ steps.prep.outputs.deploy_tagged_image }}
+          build-args: |
+            RUBY_VERSION=${{ steps.prep.outputs.ruby_version }}
+            BUNDLER_VERSION=${{ steps.prep.outputs.bundler_version }}
+            RAILS_ENV=${{ steps.prep.outputs.rails_env }}
+            NODE_MAJOR=${{ steps.prep.outputs.node_major }}
+            YARN_VERSION=${{ steps.prep.outputs.yarn_version }}
+          secret-files: |
+            app_secrets=.docker/application.yml
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache-deploy
+            type=local,src=/tmp/.buildx-cache-test-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-deploy-new
+          # ! mode=max so all stages are exported
+
+      - name: Store the new cache
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        run: |
+          rm -rf /tmp/.buildx-cache-test
+          mv /tmp/.buildx-cache-test-new /tmp/.buildx-cache-test
+          rm -rf /tmp/.buildx-cache-deploy
+          mv /tmp/.buildx-cache-deploy-new /tmp/.buildx-cache-deploy
+
+      - name: Deploy application to Amazon ECS
+        env:
+          ECS_CLUSTER_NAME: ${{ steps.prep.outputs.ecs_cluster_name }}
+          APP_NAME: ${{ inputs.ecs_app_service_name }}
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $APP_NAME --force-new-deployment
+
+      - name: Deploy sidekiq to Amazon ECS
+        if: ${{ inputs.ecs_sidekiq_service_name != null }}
+        env:
+          ECS_CLUSTER_NAME: ${{ steps.prep.outputs.ecs_cluster_name }}
+          SIDEKIQ_NAME: ${{ inputs.ecs_sidekiq_service_name }}
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $SIDEKIQ_NAME --force-new-deployment

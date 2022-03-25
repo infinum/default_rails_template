@@ -197,48 +197,6 @@ HEREDOC
 create_file 'bin/test', BIN_TEST, force: true
 chmod 'bin/test', 0755, verbose: false
 
-BIN_DEPLOY = <<~HEREDOC.strip_heredoc
-  #!/usr/bin/env bash
-
-  set -o errexit
-  set -o pipefail
-  set -o nounset
-
-  echo "=========== setting env variables ==========="
-  environment=$1
-
-  echo "=========== mina deploy =============="
-  time bundle exec mina $environment ssh_keyscan_domain
-  time bundle exec mina $environment setup
-  time bundle exec mina $environment deploy
-HEREDOC
-create_file 'bin/deploy', BIN_DEPLOY, force: true
-chmod 'bin/deploy', 0755, verbose: false
-
-BIN_PUBLISH_DOCS = <<~HEREDOC.strip_heredoc
-  #!/usr/bin/env bash
-
-  set -o errexit
-  set -o pipefail
-  set -o nounset
-
-  echo "=========== setting env variables ==========="
-  environment=$1
-
-  echo "=========== rails db:test:prepare ==========="
-  time bundle exec rails db:test:prepare
-
-  echo "=========== mina dox publish ==========="
-  time bundle exec mina "$environment" ssh_keyscan_domain
-  time bundle exec mina "$environment" dox:publish
-HEREDOC
-create_file 'bin/publish_docs', BIN_PUBLISH_DOCS, force: true
-chmod 'bin/publish_docs', 0755, verbose: false
-
-get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
-get("#{BASE_URL}/deploy-staging.yml", '.github/workflows/deploy-staging.yml')
-get("#{BASE_URL}/deploy-production.yml", '.github/workflows/deploy-production.yml')
-
 # bundler config
 BUNDLER_CI_BUILD_CONFIG = <<~HEREDOC.strip_heredoc
   ---
@@ -250,7 +208,7 @@ create_file '.bundle/ci-build/config', BUNDLER_CI_BUILD_CONFIG, force: true
 BUNDLER_CI_DEPLOY_CONFIG = <<~HEREDOC.strip_heredoc
   ---
   BUNDLE_DEPLOYMENT: "true"
-  BUNDLE_WITHOUT: "default development test ci"
+  BUNDLE_WITHOUT: "development test ci"
   # use line below when using dox
   # BUNDLE_WITHOUT: "development"
 HEREDOC
@@ -312,15 +270,6 @@ append_to_file 'Gemfile' do
       gem 'brakeman', require: false
       gem 'bundler-audit', require: false
       gem 'rubocop-infinum', require: false
-    end
-  HEREDOC
-end
-
-append_to_file 'Gemfile' do
-  <<-HEREDOC.strip_heredoc
-
-    group :deploy do
-      gem 'mina-infinum', require: false
     end
   HEREDOC
 end
@@ -420,9 +369,6 @@ create_file 'config/application.yml', FIGARO_FILE
 
 # Rubocop
 get("#{BASE_URL}/.rubocop.yml", '.rubocop.yml')
-
-# Mina
-get("#{BASE_URL}/mina_deploy.rb", 'config/deploy.rb')
 
 # Overcommit
 OVERCOMMIT_YML_FILE = <<-HEREDOC.strip_heredoc
@@ -566,17 +512,109 @@ HEREDOC
 prepend_file 'db/seeds.rb', SEEDS_DISABLE_IGNORE
 append_file 'db/seeds.rb', SEEDS_ENABLE_IGNORE
 
-# Finish
+## Ask about default PR reviewers
+default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @github_username1 @github_username2. Default reviewers:', :green)
+append_to_file '.github/CODEOWNERS' do
+  <<~HEREDOC
+    * #{default_reviewers}
+  HEREDOC
+end
 
-## Bundle install
-run 'bundle install'
+get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
 
-## Initializes secrets_cli
-run 'bundle exec secrets init'
+## Docker
+if no?('Will this application use Docker? [Yes]', :green)
+  # Mina
+  get("#{BASE_URL}/mina_deploy.rb", 'config/deploy.rb')
+  append_to_file 'Gemfile' do
+    <<~HEREDOC.strip_heredoc
 
-## Initialize rspec
-rails_command 'generate rspec:install'
-run 'bundle binstubs rspec-core'
+      group :deploy do
+        gem 'mina-infinum', require: false
+      end
+    HEREDOC
+  end
+
+  BIN_DEPLOY = <<~HEREDOC.strip_heredoc
+    #!/usr/bin/env bash
+
+    set -o errexit
+    set -o pipefail
+    set -o nounset
+
+    echo "=========== setting env variables ==========="
+    environment=$1
+
+    echo "=========== mina deploy =============="
+    time bundle exec mina $environment ssh_keyscan_domain
+    time bundle exec mina $environment setup
+    time bundle exec mina $environment deploy
+  HEREDOC
+  create_file 'bin/deploy', BIN_DEPLOY, force: true
+  chmod 'bin/deploy', 0755, verbose: false
+
+  BIN_PUBLISH_DOCS = <<~HEREDOC.strip_heredoc
+    #!/usr/bin/env bash
+
+    set -o errexit
+    set -o pipefail
+    set -o nounset
+
+    echo "=========== setting env variables ==========="
+    environment=$1
+
+    echo "=========== rails db:test:prepare ==========="
+    time bundle exec rails db:test:prepare
+
+    echo "=========== mina dox publish ==========="
+    time bundle exec mina "$environment" ssh_keyscan_domain
+    time bundle exec mina "$environment" dox:publish
+  HEREDOC
+  create_file 'bin/publish_docs', BIN_PUBLISH_DOCS, force: true
+  chmod 'bin/publish_docs', 0755, verbose: false
+
+  get("#{BASE_URL}/deploy-staging.yml", '.github/workflows/deploy-staging.yml')
+  get("#{BASE_URL}/deploy-production.yml", '.github/workflows/deploy-production.yml')
+
+  ## Users allowed to manually trigger deploys
+  staging_deployers = ask('Who can manually trigger a deploy to staging? (Example: @username1 @username2)', :green)
+  gsub_file('.github/workflows/deploy-staging.yml', 'DEPLOY USERS GO HERE', staging_deployers)
+
+  production_deployers = ask('Who can manually trigger a deploy to production? (Example: @username1 @username2)', :green)
+  gsub_file('.github/workflows/deploy-production.yml', 'DEPLOY USERS GO HERE', production_deployers)
+else
+  # remove push trigger for build workflow, the build-image workflow will be used instead
+  gsub_file '.github/workflows/build.yml', /\n\s*push:\n.*$/, ''
+
+  get "#{BASE_URL}/docker/build-image.yml", '.github/workflows/build-image.yml'
+  get "#{BASE_URL}/docker/extract_params", 'bin/extract_params'
+  chmod 'bin/extract_params', 0755, verbose: false
+
+  inside '.docker' do
+    get "#{BASE_URL}/docker/.docker/application.yml", 'application.yml'
+    get "#{BASE_URL}/docker/.docker/Aptfile", 'Aptfile'
+    run 'touch .psqlrc'
+  end
+  get "#{BASE_URL}/docker/.dockerignore", '.dockerignore'
+  get "#{BASE_URL}/docker/docker-compose.yml", 'docker-compose.yml'
+
+  require 'bundler'
+  gsub_file 'docker-compose.yml', 'placeholder-app', app_name
+  gsub_file 'docker-compose.yml', 'RUBY_VERSION: 3.1.1', "RUBY_VERSION: #{RUBY_VERSION}"
+  gsub_file 'docker-compose.yml', 'BUNDLER_VERSION: 2.3.7', "BUNDLER_VERSION: #{Bundler::VERSION}"
+
+  if yes?('Will this application need Node runtime? [No]', :green)
+    get "#{BASE_URL}/docker/Dockerfile.with_node", 'Dockerfile'
+    node_version = `node -v`.chomp.sub('v', '')
+    node_major = node_version.scan(/^[[:digit:]]+/).first
+    append_to_file 'docker-compose.yml', <<-HEREDOC.chomp, after: /BUNDLER_VERSION: .*$/
+\n        NODE_MAJOR: #{node_major}
+        NODE_VERSION: #{node_version}
+    HEREDOC
+  else
+    get "#{BASE_URL}/docker/Dockerfile", 'Dockerfile'
+  end
+end
 
 ## Frontend
 if yes?('Will this application have a frontend? [No]', :green)
@@ -587,8 +625,6 @@ if yes?('Will this application have a frontend? [No]', :green)
   append_to_file 'Gemfile', after: " gem 'rubocop-infinum', require: false\n" do
     "    gem 'slim_lint', require: false\n"
   end
-
-  run 'bundle install'
 
   get("#{BASE_URL}/.slim-lint.yml", '.slim-lint.yml')
 
@@ -674,22 +710,19 @@ if yes?('Will this application have a frontend? [No]', :green)
   gsub_file('.github/workflows/build.yml', /^.*use_node: false.*\n/, '')
 end
 
-## Ask about default PR reviewers
-default_reviewers = ask('Who are default pull request reviewers (defined in .github/CODEOWNERS)? E.g.: @github_username1 @github_username2. Default reviewers:', :green)
-append_to_file '.github/CODEOWNERS' do
-  <<~HEREDOC
-  * #{default_reviewers}
-  HEREDOC
-end
+# Finish
 
-## Users allowed to manually trigger deploys
-staging_deployers = ask('Who can manually trigger a deploy to staging? (Example: @username1 @username2)', :green)
-gsub_file('.github/workflows/deploy-staging.yml', 'DEPLOY USERS GO HERE', staging_deployers)
+## Bundle install
+run 'bundle install'
 
-production_deployers = ask('Who can manually trigger a deploy to production? (Example: @username1 @username2)', :green)
-gsub_file('.github/workflows/deploy-production.yml', 'DEPLOY USERS GO HERE', production_deployers)
+## Initializes secrets_cli
+run 'bundle exec secrets init'
 
-# add annotate task file and ignore its rubocop violations
+## Initialize rspec
+rails_command 'generate rspec:install'
+run 'bundle binstubs rspec-core'
+
+## add annotate task file and ignore its rubocop violations
 rails_command 'generate annotate:install'
 ANNOTATE_TASK_FILE = 'lib/tasks/auto_annotate_models.rake'
 prepend_file ANNOTATE_TASK_FILE, "# frozen_string_literal: true\n\n"
@@ -698,9 +731,6 @@ append_to_file ANNOTATE_TASK_FILE, after: "its thing in production.\n" do
 end
 append_file ANNOTATE_TASK_FILE,
             "# rubocop:enable Metrics/BlockLength, Rails/RakeEnvironment\n"
-
-## Initialize git
-git :init
 
 ## Overcommit install and sign
 run 'overcommit --install'
