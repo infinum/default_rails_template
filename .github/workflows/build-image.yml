@@ -22,11 +22,16 @@ on:
 
       # Set the ECS application service name
       ecs_app_service_name:
-        required: true
+        required: false
         type: string
 
       # Set the ECS sidekiq service name
       ecs_sidekiq_service_name:
+        required: false
+        type: string
+
+      # Override the rails environment otherwise parsed from the branch name
+      rails_env:
         required: false
         type: string
 
@@ -71,6 +76,7 @@ jobs:
           AWS_ECR_REPO_NAME: ${{ secrets.AWS_ECR_REPO_NAME }}
           AWS_ECS_CLUSTER_URL: ${{ secrets.AWS_ECS_CLUSTER_URL }}
           AWS_ECS_CLUSTER_NAME: ${{ secrets.AWS_ECS_CLUSTER_NAME }}
+          RAILS_ENV: ${{ inputs.rails_env }}
         run: bin/extract_params
 
       - name: Set up Docker Buildx
@@ -127,8 +133,17 @@ jobs:
                        ${{ steps.prep.outputs.tagged_image }}-test \
                      bin/test
 
+      - name: Store the new test cache
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        run: |
+          rm -rf /tmp/.buildx-cache-test
+          mv /tmp/.buildx-cache-test-new /tmp/.buildx-cache-test
+
+      ## Deploy steps
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.5.11
+        if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         with:
           aws-access-key-id: ${{ secrets.AWS_IAM_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_IAM_ACCESS_SECRET_KEY }}
@@ -136,10 +151,12 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
+        if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Cache deploy image layers
         uses: actions/cache@v2
+        if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         with:
           path: /tmp/.buildx-cache-deploy
           key: docker-build-deploy-${{ github.sha }}
@@ -147,6 +164,7 @@ jobs:
 
       - name: Build deploy image
         uses: docker/build-push-action@v2
+        if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         with:
           context: .
           builder: ${{ steps.buildx.outputs.name }}
@@ -170,16 +188,16 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-deploy-new
           # ! mode=max so all stages are exported
 
-      - name: Store the new cache
+      - name: Store the new deploy cache
         # https://github.com/docker/build-push-action/issues/252
         # https://github.com/moby/buildkit/issues/1896
+        if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         run: |
-          rm -rf /tmp/.buildx-cache-test
-          mv /tmp/.buildx-cache-test-new /tmp/.buildx-cache-test
           rm -rf /tmp/.buildx-cache-deploy
           mv /tmp/.buildx-cache-deploy-new /tmp/.buildx-cache-deploy
 
       - name: Deploy application to Amazon ECS
+        if: ${{ inputs.ecs_app_service_name != null }}
         env:
           ECS_CLUSTER_NAME: ${{ steps.prep.outputs.ecs_cluster_name }}
           APP_NAME: ${{ inputs.ecs_app_service_name }}
