@@ -184,7 +184,7 @@ jobs:
             app_secrets=.docker/application.yml
           cache-from: |
             type=local,src=/tmp/.buildx-cache-deploy
-            type=local,src=/tmp/.buildx-cache-test-new
+            type=local,src=/tmp/.buildx-cache-test
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-deploy-new
           # ! mode=max so all stages are exported
 
