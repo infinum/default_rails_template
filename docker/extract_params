@@ -2,16 +2,16 @@
 
 set -e
 
-rails_env=$(echo $GITHUB_REF_NAME | sed -e 's/master/production/g' -e 's/main/production/g')
-image_tag="git-$rails_env-$(echo $GITHUB_SHA | head -c7)"
+docker_env_tag=$(echo $GITHUB_REF_NAME | sed -e 's/master/production/g' -e 's/main/production/g')
+image_tag="git-$docker_env_tag-$(echo $GITHUB_SHA | head -c7)"
+rails_env=${RAILS_ENV:-${docker_env_tag}}
+default_ecs_cluster_name=${AWS_ECR_REPO_NAME}-${docker_env_tag}-cluster
 
 ruby_version=$(cat .ruby-version | tr -d '\r\n')
 bundler_version=$(ruby -e "require 'bundler'; puts Bundler::LockfileParser.bundled_with")
 node_version=$(cat .node-version | tr -d '\r\n')
 node_major="$(cut -d '.' -f 1 <<<"$node_version")"
 yarn_version=$(jq '.engines.yarn' package.json -r | tr -dc '[:alnum:].')
-
-default_ecs_cluster_name=${AWS_ECR_REPO_NAME}-${rails_env}-cluster
 
 echo ::set-output name=ruby_version::${ruby_version}
 echo ::set-output name=bundler_version::${bundler_version}
@@ -20,6 +20,6 @@ echo ::set-output name=node_major::${node_major}
 echo ::set-output name=yarn_version::${yarn_version}
 
 echo ::set-output name=tagged_image::${AWS_ECR_REPO_URL}/${AWS_ECR_REPO_NAME}:${image_tag}
-echo ::set-output name=deploy_tagged_image::${AWS_ECR_REPO_URL}/${AWS_ECR_REPO_NAME}:${rails_env}
+echo ::set-output name=deploy_tagged_image::${AWS_ECR_REPO_URL}/${AWS_ECR_REPO_NAME}:${docker_env_tag}
 
 echo ::set-output name=ecs_cluster_name::${AWS_ECS_CLUSTER_URL}/${AWS_ECS_CLUSTER_NAME:-${default_ecs_cluster_name}}
