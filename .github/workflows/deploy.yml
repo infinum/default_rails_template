@@ -122,9 +122,10 @@ jobs:
           fi
 
           SHORT_SHA=$(git rev-parse --short HEAD)
+          FULL_SHA=$(git rev-parse HEAD)
           COMMIT_MESSAGE=$(git show -s --format=%s)
           GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$FULL_SHA"
 
           if [[ "$SUCCESS" = true && ("$NOTIFY_ON" = "success" || "$NOTIFY_ON" = "all") ]] ; then
             curl -X POST https://slack.com/api/chat.postMessage \

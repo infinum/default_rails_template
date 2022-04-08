@@ -165,11 +165,12 @@ jobs:
           fi
 
           SHORT_SHA=$(git rev-parse --short HEAD)
+          FULL_SHA=$(git rev-parse HEAD)
           COMMIT_MESSAGE=$(git show -s --format=%s)
           GITHUB_PR_URL=$(gh pr view --json url --jq .url || true)
           GITHUB_PR_NUMBER=$(gh pr view --json number --jq .number || true)
           GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$FULL_SHA"
           GITHUB_BRANCH_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$GITHUB_REF_NAME"
 
           if [ -z "$GITHUB_PR_NUMBER" ] ; then
