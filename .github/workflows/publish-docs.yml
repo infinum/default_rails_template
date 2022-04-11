@@ -44,9 +44,26 @@ on:
         required: true
         type: string
 
+      # Defines the Slack channel to which a notification will be sent upon completion of the workflow
+      # Format: channel name (without the #)
+      # Example: 'my-channel-name'
+      slack_notification_channel:
+        required: false
+        type: string
+
+      # Defines on which events the notification is sent to the Slack channel defined in `slack_notification_channel` input
+      # By default, all events will trigger a notification
+      # Enum: success | failure | all
+      notify_on:
+        required: false
+        type: string
+        default: all
+
     secrets:
       SSH_PRIVATE_KEY:
         required: true
+      SLACK_BOT_TOKEN:
+        required: false
       VAULT_ADDR:
         required: true
       VAULT_AUTH_METHOD:
@@ -127,6 +144,86 @@ jobs:
       - name: Wait for Postgres to be ready
         run: until docker exec postgres pg_isready; do sleep 1; done
       - name: Publish docs
+        id: publish_docs
         run: 'bin/publish_docs ${{ inputs.environment }}'
         env:
           RAILS_ENV: test
+      - name: Notify on Slack
+        env:
+          SUCCESS: ${{ steps.publish_docs.outcome == 'success' }}
+          FAILURE: ${{ steps.publish_docs.outcome == 'failure' }}
+          CHANNEL: ${{ inputs.slack_notification_channel }}
+          NOTIFY_ON: ${{ inputs.notify_on }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCS_ENVIRONMENT: ${{ inputs.environment }}
+        if: ${{ always() && inputs.slack_notification_channel }}
+        run: |
+          if [ -z "$SLACK_BOT_TOKEN" ] ; then
+            echo "SLACK_BOT_TOKEN secret is missing from the workflow!"
+            exit 1
+          fi
+
+          if [[ "$NOTIFY_ON" != "success" && "$NOTIFY_ON" != "failure" && "$NOTIFY_ON" != "all" ]] ; then
+            echo "notify_on input is not valid. Must be one of: 'success', 'failure', or 'all'"
+            exit 1
+          fi
+
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          FULL_SHA=$(git rev-parse HEAD)
+          COMMIT_MESSAGE=$(git show -s --format=%s)
+          GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$FULL_SHA"
+
+          if [[ "$SUCCESS" = true && ("$NOTIFY_ON" = "success" || "$NOTIFY_ON" = "all") ]] ; then
+            curl -X POST https://slack.com/api/chat.postMessage \
+                 -H "Content-type: application/json; charset=utf-8" \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 -s -S \
+                 -d @- <<- EOF
+                  {
+                    "channel": "$CHANNEL",
+                    "attachments": [
+                      {
+                        "color": "#19a974",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "$GITHUB_ACTOR <$GITHUB_RUN_URL|published documentation> on *$DOCS_ENVIRONMENT*! :tada: \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+          EOF
+          fi
+
+          if [[ "$FAILURE" = true && ("$NOTIFY_ON" = "failure" || "$NOTIFY_ON" = "all") ]] ; then
+            curl -X POST https://slack.com/api/chat.postMessage \
+                 -H "Content-type: application/json; charset=utf-8" \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 -s -S \
+                 -d @- <<- EOF
+                  {
+                    "channel": "$CHANNEL",
+                    "attachments": [
+                      {
+                        "color": "#f75819",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "$GITHUB_ACTOR failed to <$GITHUB_RUN_URL|publish documentation> to *$DOCS_ENVIRONMENT*! :boom: \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+          EOF
+          fi
+
