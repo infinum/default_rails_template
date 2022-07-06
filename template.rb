@@ -240,6 +240,7 @@ append_to_file 'Gemfile', after: /gem "rails".*\n/ do
     gem 'pry-byebug'
     gem 'pry-rails'
     gem 'secrets_cli', require: false
+    gem 'strong_migrations'
   HEREDOC
 end
 
@@ -734,6 +735,9 @@ append_to_file ANNOTATE_TASK_FILE, after: "its thing in production.\n" do
 end
 append_file ANNOTATE_TASK_FILE,
             "# rubocop:enable Metrics/BlockLength, Rails/RakeEnvironment\n"
+
+## add strong migrations config
+rails_command 'generate strong_migrations:install'
 
 ## Overcommit install and sign
 run 'overcommit --install'
