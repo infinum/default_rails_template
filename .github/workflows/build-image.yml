@@ -55,6 +55,7 @@ jobs:
   build_image:
     name: 'Build, Test, & Push Docker Image'
     runs-on: ${{ inputs.runner }}
+    timeout-minutes: 30
 
     services:
       postgres:
