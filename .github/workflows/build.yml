@@ -76,6 +76,7 @@ jobs:
   build:
     name: 'Build'
     runs-on: ${{ inputs.runner }}
+    timeout-minutes: 30
     env:
       BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
       RUBOCOP_CACHE_ROOT: .rubocop-cache
