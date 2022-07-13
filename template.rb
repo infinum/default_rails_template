@@ -715,8 +715,8 @@ end
 ## Bundle install
 run 'bundle install'
 
-## Add linux to PLATFORMS to enable bundle install on CI
-run 'bundle lock --add-platform x86_64-linux'
+## Add ruby to PLATFORMS to enable bundle install on CI
+run 'bundle lock --add-platform ruby'
 
 ## Initializes secrets_cli
 run 'bundle exec secrets init'
