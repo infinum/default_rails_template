@@ -590,6 +590,8 @@ else
   get "#{BASE_URL}/docker/build-image.yml", '.github/workflows/build-image.yml'
   get "#{BASE_URL}/docker/extract_params", 'bin/extract_params'
   chmod 'bin/extract_params', 0755, verbose: false
+  get "#{BASE_URL}/docker/connect_to_container", 'bin/connect_to_container'
+  chmod 'bin/connect_to_container', 0755, verbose: false
 
   inside '.docker' do
     get "#{BASE_URL}/docker/.docker/application.yml", 'application.yml'
