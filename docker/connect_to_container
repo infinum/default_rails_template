@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# usage: bin/connect_to_container - connect to default specified cluster and service
+#        bin/connect_to_container service_name - connect to a service in the default cluster
+#        bin/connect_to_container service_name cluster_name - connect to specific cluster and service
+#        bin/connect_to_container service_name cluster_name container_name
+
+# follow the instructions in Handbook guide
+# https://infinum.com/handbook/rails/containerization/deployment/connecting-to-a-container
+# then replace the placeholder variables below
+
+CLUSTER_NAME=${2:-<DEFAULT_CLUSTER_NAME>}
+SERVICE_NAME=${1:-<DEFAULT_SERVICE_NAME>}
+CONTAINER_NAME=${3:-$SERVICE_NAME}
+
+task_arn=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME | jq -r '.taskArns[0]')
+
+if [[ -z "$task_arn" ]]
+  then print "No tasks found under service $SERVICE_NAME in cluster $CLUSTER_NAME"
+  exit 1
+fi
+
+aws ecs execute-command  \
+    --cluster $CLUSTER_NAME \
+    --task $task_arn \
+    --container $CONTAINER_NAME \
+    --command "/bin/bash" \
+    --interactive
