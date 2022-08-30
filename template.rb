@@ -18,8 +18,6 @@ README_MD = <<-HEREDOC.strip_heredoc
   * Yarn (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
 
 ## Setup
-Before:
-  * ensure you have read permissions for vault
 
 Run:
 ```bash
@@ -99,8 +97,8 @@ BIN_SETUP = <<-HEREDOC.strip_heredoc
     puts "== Installing overcommit =="
     system 'overcommit --install'
 
-    puts '== Pulling secrets =='
-    system 'bundle exec secrets pull'
+    puts '== Copy sample secrets =='
+    system 'cp config/application.example.yml config/application.yml'
 
     puts '== Preparing database =='
     system 'bin/rake db:setup'
@@ -126,8 +124,8 @@ BIN_UPDATE = <<-HEREDOC.strip_heredoc
     # puts '== Installing JS dependencies =='
     # system 'yarn install'
 
-    puts '== Pulling secrets =='
-    system 'bundle exec secrets pull'
+    puts '== Copy sample secrets =='
+    system 'cp config/application.example.yml config/application.yml'
 
     puts '== Preparing database =='
     system 'bin/rake db:migrate'
@@ -137,13 +135,11 @@ create_file 'bin/update', BIN_UPDATE, force: true
 
 BIN_PREPARE_CI = <<~HEREDOC.strip_heredoc
   #!/usr/bin/env bash
-
   set -o errexit
   set -o pipefail
   set -o nounset
 
-  echo "=========== pull secrets ==========="
-  bundle exec secrets pull -e development -y
+  # leaving it here as it's required by the GHA
 HEREDOC
 create_file 'bin/prepare_ci', BIN_PREPARE_CI, force: true
 chmod 'bin/prepare_ci', 0755, verbose: false
@@ -239,7 +235,6 @@ append_to_file 'Gemfile', after: /gem "rails".*\n/ do
     gem 'figaro'
     gem 'pry-byebug'
     gem 'pry-rails'
-    gem 'secrets_cli', require: false
     gem 'strong_migrations'
   HEREDOC
 end
@@ -307,20 +302,8 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
 
     bugsnag_api_key: <%= Figaro.env.bugsnag_api_key! %>
 
-    aws_s3_access_key_id: <%= Figaro.env.aws_s3_access_key_id! %>
-    aws_s3_secret_access_key: <%= Figaro.env.aws_s3_secret_access_key! %>
-    aws_s3_region: <%= Figaro.env.aws_s3_region! %>
-    aws_s3_bucket: <%= Figaro.env.aws_s3_bucket! %>
-
-    mailgun_api_key: <%= Figaro.env.mailgun_api_key! %>
-    mailgun_domain: <%= Figaro.env.mailgun_domain! %>
-    mailgun_host: <%= Figaro.env.mailgun_host! %>
-
     redis_url: <%= Figaro.env.redis_url! %>
 
-    # ensure to switch back to <%= %> if enabling sidekiq secrets
-    # sidekiq_dashboard_username: <!% Figaro.env.sidekiq_dashboard_username! %>
-    # sidekiq_dashboard_password: <!% Figaro.env.sidekiq_dashboard_password! %>
   development:
     <<: *default
 
@@ -337,36 +320,24 @@ HEREDOC
 create_file 'config/secrets.yml', SECRETS_YML_FILE, force: true
 
 FIGARO_FILE = <<-HEREDOC.strip_heredoc
-  database_host: localhost
-  database_username: postgres
-  database_password: ''
-  database_name: ''
-  database_port: '5432'
+   database_host: localhost
+   database_username: postgres
+   database_password: ''
+   database_name: ''
+   database_port: '5432'
 
-  bugsnag_api_key: ''
+   bugsnag_api_key: ''
 
-  aws_s3_access_key_id: ''
-  aws_s3_secret_access_key: ''
-  aws_s3_region: ''
-  aws_s3_bucket: ''
+   redis_url: 'redis://localhost:6379'
 
-  mailgun_api_key: ''
-  mailgun_domain: ''
-  mailgun_host: ''
+   development:
+     secret_key_base: #{SecureRandom.hex(64)}
 
-  redis_url: 'redis://localhost:6379'
+   test:
+     secret_key_base: #{SecureRandom.hex(64)}
+ HEREDOC
 
-  # sidekiq_dashboard_username: ''
-  # sidekiq_dashboard_password: ''
-
-  development:
-    secret_key_base: #{SecureRandom.hex(64)}
-
-  test:
-    secret_key_base: #{SecureRandom.hex(64)}
-HEREDOC
-
-create_file 'config/application.yml', FIGARO_FILE
+create_file 'config/application.example.yml', FIGARO_FILE
 
 # Rubocop
 get("#{BASE_URL}/.rubocop.yml", '.rubocop.yml')
@@ -425,8 +396,7 @@ GITIGNORED_FILES = <<-HEREDOC.strip_heredoc
   dump.rdb
   logfile
   .DS_Store
-  # Ignore application configuration
-  config/application*.yml
+  config/application.yml
 HEREDOC
 
 append_file '.gitignore', GITIGNORED_FILES
@@ -594,7 +564,6 @@ else
   chmod 'bin/connect_to_container', 0755, verbose: false
 
   inside '.docker' do
-    get "#{BASE_URL}/docker/.docker/application.yml", 'application.yml'
     get "#{BASE_URL}/docker/.docker/Aptfile", 'Aptfile'
     run 'touch .psqlrc'
   end
@@ -621,7 +590,7 @@ end
 
 ## Frontend
 if yes?('Will this application have a frontend? [No]', :green)
-  append_to_file 'Gemfile', after: "gem 'secrets_cli', require: false\n" do
+  append_to_file 'Gemfile', after: "gem 'pry-rails'\n" do
     "gem 'slim'\n"
   end
 
@@ -721,8 +690,8 @@ run 'bundle install'
 ## Add ruby to PLATFORMS to enable bundle install on CI
 run 'bundle lock --add-platform ruby'
 
-## Initializes secrets_cli
-run 'bundle exec secrets init'
+## Needed by the rails_command that follow
+run 'cp config/application.example.yml config/application.yml'
 
 ## Initialize rspec
 rails_command 'generate rspec:install'
