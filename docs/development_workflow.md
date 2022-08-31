@@ -6,9 +6,12 @@ Project manager can give you access to:
 * project Slack channels **LINK-TO-SLACK-CHANNELS** <!-- https://infinum.slack.com/path-to-project --> <!-- DEVELOPER -->
 * project Google Drive **LINK-TO-GOOGLE-DRIVE** <!-- https://drive.google.com//path-to-project --> <!-- DEVELOPER -->
 * project design (Figma, Sketch, etc) **LINK-TO-DESIGN** <!-- https://www.figma.com/path-to-project --> <!-- DEVELOPER -->
+* 1password vault - **VAULT-NAME** <!-- DEVELOPER -->
+
+<!-- if project has a project specific email such as accounts.{client}@infinum.com or support.{client}@infinum.com -->
+Project manager will ask Google Workspace account manager to add you to the email group.
 
 Devops can give you access to:
-* 1password vault - **VAULT-NAME** <!-- DEVELOPER -->
 * git repository - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
 * development and staging secrets - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
 * bugsnag project - **LINK-TO-BUGSNAG** <!-- https://bugsnag.com/path-to-project --> <!-- DEVELOPER -->
