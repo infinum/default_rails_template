@@ -246,6 +246,7 @@ append_to_file 'Gemfile', after: "group :development do\n" do
   gem 'binding_of_caller'
   gem 'bullet'
   gem 'overcommit', require: false
+  gem 'std_gems', git: 'git@github.com:infinum/std_gems.git', require: false
   HEREDOC
 end
 # end
@@ -360,6 +361,9 @@ PreCommit:
   BundleCheck:
     enabled: true
 
+  StdGemsCheck:
+    enabled: true
+
   RuboCop:
     enabled: true
     on_warn: fail
@@ -446,6 +450,64 @@ updates:
 HEREDOC
 
 create_file '.github/dependabot.yml', DEPENDABOT_FILE
+
+# .git-hooks/pre_commit/std_gems_check.rb
+STD_GEMS_CHECK_FILE = <<-HEREDOC.strip_heredoc
+# frozen_string_literal: true
+
+require 'std_gems'
+
+module Overcommit
+  module Hook
+    module PreCommit
+      class StdGemsCheck < Base
+        GEMFILE_LOCK = 'Gemfile.lock'
+        DESCRIPTION = 'Check stdgems versions'
+
+        def run
+          return :pass unless gemfile_lock_changed?
+          return :pass if (gem_diffs = StdGems.gem_diffs).empty?
+
+          [:fail, error_message(gem_diffs)]
+        end
+
+        def description
+          DESCRIPTION
+        end
+
+        private
+
+        def gemfile_lock_changed?
+          applicable_files.any? { |file_path| file_path.end_with?(GEMFILE_LOCK) }
+        end
+
+        def error_message(gem_diffs)
+          <<~MSG
+            Your Gemfile requires different version of gems than what is distributed with your Ruby installation
+            \#{gem_diffs.map { |gem_diff| format_diff_info(gem_diff) }.join("\\n")}
+
+            Lock following gem versions in your Gemfile
+            # stdgems
+            \#{gem_diffs.map { |gem_diff| format_gem_version_suggestion(gem_diff) }.join("\\n")}
+
+            And run `bundle install`
+          MSG
+        end
+
+        def format_diff_info(gem_diff)
+          " * \#{gem_diff.gem_name}:\#{gem_diff.bundle_version} (std: \#{gem_diff.std_version})"
+        end
+
+        def format_gem_version_suggestion(gem_diff)
+          "gem '\#{gem_diff.gem_name}', '\#{gem_diff.std_version}'"
+        end
+      end
+    end
+  end
+end
+HEREDOC
+
+create_file '.git-hooks/pre_commit/std_gems_check.rb', STD_GEMS_CHECK_FILE
 
 # .git-hooks/pre_push/zeitwerk_check.rb
 ZEITWERK_CHECK_FILE = <<-HEREDOC.strip_heredoc
