@@ -775,6 +775,9 @@ rails_command 'generate strong_migrations:install'
 ## Overcommit install and sign
 run 'overcommit --install'
 run 'overcommit --sign'
+run 'git add .git-hooks/pre_commit/std_gems_check.rb'
+run 'overcommit --sign pre-commit'
+run '.git add git-hooks/pre_push/zeitwerk_check.rb'
 run 'overcommit --sign pre-push'
 
 # Fix default rubocop errors
