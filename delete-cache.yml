@@ -1,0 +1,11 @@
+name: Delete Cache
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cleanup:
+    uses: infinum/default_rails_template/.github/workflows/delete-cache.yml@v1
