@@ -492,6 +492,7 @@ append_to_file '.github/CODEOWNERS' do
 end
 
 get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
+get("#{BASE_URL}/delete-cache.yml", '.github/workflows/delete-cache.yml')
 
 ## Docker
 if no?('Will this application use Docker? [Yes]', :green)
