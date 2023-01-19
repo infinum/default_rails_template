@@ -19,6 +19,12 @@ on:
         type: boolean
         default: true
 
+      # Determines whether to install libvips42 and tools
+      use_libvips:
+        required: false
+        type: boolean
+        default: false
+
       # Sets BUNDLE_APP_CONFIG environment variable
       # See: https://bundler.io/man/bundle-config.1.html
       bundle_app_config:
@@ -114,6 +120,9 @@ jobs:
           key: ${{ runner.os }}-rubocop-cache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-rubocop-cache-
+      - name: Install libvips
+        if: ${{ startsWith(inputs.runner, 'ubuntu') && inputs.use_libvips }}
+        run: sudo apt install libvips42 libvips-tools
       - name: Set up Node
         uses: actions/setup-node@v2
         if: ${{ inputs.use_node }}
