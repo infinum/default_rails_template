@@ -1,9 +1,5 @@
 name: Delete Cache
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   workflow_call:
 
@@ -11,6 +7,7 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
