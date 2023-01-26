@@ -19,11 +19,10 @@ on:
         type: boolean
         default: true
 
-      # Determines whether to install libvips42 and tools
-      use_libvips:
+      # Determines the path to the aptfile to select which apt packages get installed on the build runner
+      aptfile:
         required: false
-        type: boolean
-        default: false
+        type: string
 
       # Sets BUNDLE_APP_CONFIG environment variable
       # See: https://bundler.io/man/bundle-config.1.html
@@ -120,9 +119,16 @@ jobs:
           key: ${{ runner.os }}-rubocop-cache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-rubocop-cache-
-      - name: Install libvips
-        if: ${{ startsWith(inputs.runner, 'ubuntu') && inputs.use_libvips }}
-        run: sudo apt install libvips42 libvips-tools
+      - name: Fetch Aptfile
+        id: apt_packages
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ${{ inputs.aptfile }}
+      - name: Install dependencies
+        if: ${{ startsWith(inputs.runner, 'ubuntu') &&  inputs.aptfile }}
+        run: sudo apt install $aptfile
+        env:
+          aptfile: "${{ steps.apt_packages.outputs.content }}"
       - name: Set up Node
         uses: actions/setup-node@v2
         if: ${{ inputs.use_node }}
