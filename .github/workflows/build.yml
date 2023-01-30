@@ -19,6 +19,11 @@ on:
         type: boolean
         default: true
 
+      # Determines the path to the aptfile to select which apt packages get installed on the build runner
+      aptfile:
+        required: false
+        type: string
+
       # Sets BUNDLE_APP_CONFIG environment variable
       # See: https://bundler.io/man/bundle-config.1.html
       bundle_app_config:
@@ -114,6 +119,17 @@ jobs:
           key: ${{ runner.os }}-rubocop-cache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-rubocop-cache-
+      - name: Fetch Aptfile
+        if: ${{ startsWith(inputs.runner, 'ubuntu' && inputs.aptfile }}
+        id: apt_packages
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ${{ inputs.aptfile }}
+      - name: Install dependencies
+        if: ${{ startsWith(inputs.runner, 'ubuntu') && inputs.aptfile }}
+        run: sudo apt install $aptfile
+        env:
+          aptfile: "${{ steps.apt_packages.outputs.content }}"
       - name: Set up Node
         uses: actions/setup-node@v2
         if: ${{ inputs.use_node }}
