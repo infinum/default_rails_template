@@ -120,7 +120,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-rubocop-cache-
       - name: Fetch Aptfile
-        if: ${{ startsWith(inputs.runner, 'ubuntu' && inputs.aptfile }}
+        if: ${{ startsWith(inputs.runner, 'ubuntu') && inputs.aptfile }}
         id: apt_packages
         uses: juliangruber/read-file-action@v1
         with:
