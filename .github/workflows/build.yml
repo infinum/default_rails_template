@@ -127,7 +127,9 @@ jobs:
           path: ${{ inputs.aptfile }}
       - name: Install dependencies
         if: ${{ startsWith(inputs.runner, 'ubuntu') && inputs.aptfile }}
-        run: sudo apt install $aptfile
+        run: |
+          sudo apt update
+          sudo apt install $aptfile
         env:
           aptfile: "${{ steps.apt_packages.outputs.content }}"
       - name: Set up Node
