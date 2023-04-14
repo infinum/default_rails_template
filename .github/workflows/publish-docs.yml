@@ -75,7 +75,7 @@ on:
 
       # Additional environment variables set in the workflow
       # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
-      # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }' 
+      # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }'
       ADDITIONAL_VARIABLES:
         required: false
 
@@ -131,7 +131,7 @@ jobs:
       - name: Install JS packages
         if: ${{ inputs.use_node }}
         run: yarn install --frozen-lockfile
-      - uses: webfactory/ssh-agent@v0.5.4
+      - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Prepare CI
