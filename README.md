@@ -70,6 +70,7 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 - Adds [Pry-Rails](https://github.com/rweng/pry-rails) to the Gemfile, inside of the development and test group
 - Adds [Rubocop](https://github.com/bbatsov/rubocop), [RSpec-Rubocop](https://github.com/backus/rubocop-rspec) & [Overcommit](https://github.com/brigade/overcommit) to the Gemfile, inside of the development group
 - Adds [Rspec-Rails](https://github.com/rspec/rspec-rails) to the Gemfile and initializes it
+- Adds [License-Finder](https://github.com/pivotal/LicenseFinder) to the Gemfile and initializes it
 - Initializes deploy script with [Mina](https://github.com/mina-deploy/mina)
 - Initializes spring binstubs
 - Updates the secrets.yml file to use Figaro and have defaults
