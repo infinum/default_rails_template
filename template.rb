@@ -606,9 +606,6 @@ if yes?('Will this application have a frontend? [No]', :green)
 
   create_file '.node-version', node_version
 
-  # add infinum gems to approved gems list because currently their license is UNKNOWN
-  run 'bundle exec license_finder approvals add @infinumrails/stylelint-config-scss @infinumrails/eslint-config-js'
-
   PACKAGE_JSON_FILE = <<~HEREDOC
     {
       "name": "#{app_name}",
@@ -728,11 +725,6 @@ run 'overcommit --sign pre-push'
 # Fix default rubocop errors
 run 'bundle exec rubocop -A'
 
-# add development, test and ci gem groups to ignored_groups when checking license types
-run 'bundle exec license_finder ignored_groups add development'
-run 'bundle exec license_finder ignored_groups add test'
-run 'bundle exec license_finder ignored_groups add ci'
-
 # add a list of permitted licenses to license_finder configuration file
 run 'bundle exec license_finder permitted_licenses add "New BSD" "Simplified BSD" ' \
     'ruby "2-clause BSDL" "Python-2.0" MIT "Apache 2.0" ISC CC0-1.0 CC-BY-3.0 ' \
@@ -741,5 +733,5 @@ run 'bundle exec license_finder permitted_licenses add "New BSD" "Simplified BSD
 # add a list of restricted licenses to license_finder configuration file
 run 'bundle exec license_finder restrict add GPL-2.0 GPL-3.0'
 
-# add infinum gems to approved gems list because currently their license is UNKNOWN
-run 'bundle exec license_finder approvals add enumerations'
+# add bundle-audit gem to approved gems list
+run 'bundle exec license_finder approvals add bundler-audit'
