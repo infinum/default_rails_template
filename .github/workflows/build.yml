@@ -115,7 +115,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-rubocop-cache-
       - name: Set up Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
