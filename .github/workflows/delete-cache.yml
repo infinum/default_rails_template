@@ -16,9 +16,6 @@ jobs:
         run: |
           gh extension install actions/gh-actions-cache
 
-          REPO=$GITHUB_REPOSITORY
-          BRANCH=$GITHUB_REF_NAME
-
           echo "Fetching list of cache keys"
           cacheKeysForPR=$(gh actions-cache list -R $REPO -B $BRANCH | cut -f 1 )
 
@@ -32,3 +29,5 @@ jobs:
           echo "Done"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ env.GITHUB_REPOSITORY }}
+          BRANCH: ${{ env.GITHUB_REF_NAME }}
