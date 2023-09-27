@@ -108,7 +108,7 @@ jobs:
         with:
           bundler-cache: true
       - name: Prepare RuboCop cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: ${{ runner.os }}-rubocop-cache-${{ github.sha }}
@@ -120,7 +120,7 @@ jobs:
         with:
           node-version-file: '.node-version'
       - name: Prepare node_modules cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ inputs.use_node }}
         with:
           path: node_modules
