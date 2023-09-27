@@ -29,5 +29,5 @@ jobs:
           echo "Done"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ env.GITHUB_REPOSITORY }}
-          BRANCH: ${{ env.GITHUB_REF_NAME }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
