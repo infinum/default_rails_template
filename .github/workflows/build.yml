@@ -102,25 +102,25 @@ jobs:
             exit 1
           fi
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
       - name: Prepare RuboCop cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: ${{ runner.os }}-rubocop-cache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-rubocop-cache-
       - name: Set up Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
       - name: Prepare node_modules cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         if: ${{ inputs.use_node }}
         with:
           path: node_modules
