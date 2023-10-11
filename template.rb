@@ -653,6 +653,10 @@ if yes?('Will this application have a frontend? [No]', :green)
     enabled: true
     on_warn: fail
     command: ['bundle', 'exec', 'license_finder']
+    requires_files: true
+    include:
+      - 'Gemfile*'
+      - 'package.json'
     HEREDOC
   end
 
