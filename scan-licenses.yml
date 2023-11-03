@@ -1,11 +1,12 @@
 name: Scan licenses
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'Gemfile*'
       - 'package.json'
 
 jobs:
-  cleanup:
+  scanning:
     uses: infinum/default_rails_template/.github/workflows/scan-licenses.yml@v1
