@@ -36,6 +36,7 @@ task :deploy do
     invoke :'bundle:install'
     command 'yarn install'
     invoke :'secrets:pull'
+    invoke :load_rails_environment
     invoke :'rails:db_migrate'
     invoke :'rails:assets_precompile'
     invoke :'deploy:cleanup'
@@ -46,4 +47,9 @@ task :deploy do
       # invoke :link_sidekiq_assets
     end
   end
+end
+
+task :load_rails_environment do
+  comment "Loading the rails environment"
+  command "#{fetch(:bundle_prefix)} rails runner 'puts Rails.env'"
 end
