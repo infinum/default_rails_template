@@ -41,7 +41,7 @@ Build and deploy workflows can send Slack notifications upon completion of workf
 - `SLACK_BOT_TOKEN` secret (you should already have this GitHub secret set up in the repo)
 - `slack_notification_channel` input with the name of the Slack channel as the value (without the # symbol)
 
-By default, a notification will be sent if the run either succeeded or failed. If you want notifications only on successful runs, add the `notify_on` input to the workflow with the value `success`. Similarily, if you want notifications only for failed runs, the value of the `notify_on` input should be `failure`. 
+By default, a notification will be sent if the run either succeeded or failed. If you want notifications only on successful runs, add the `notify_on` input to the workflow with the value `success`. Similarily, if you want notifications only for failed runs, the value of the `notify_on` input should be `failure`.
 
 ### Frontend
 
@@ -78,10 +78,6 @@ The `-m` flag tells the generator to run our app [template](https://github.com/i
 - Git inits
 - Adds more common gitignored files to `.gitignore`
 - Adds documentation in `docs` folders
-
-## Recommendations
-
-After running the template generator, this script will install overcommit which won't let you commit your project if it has some Rubocop offenses or if your Gemfile isn't alphabetically sorted. To sort your Gemfile, use the [Eefgilm](https://github.com/enilsen16/Eefgilm) gem. Install it with `gem install eefgilm` and run the `eefgilm` command to sort your Gemfile.
 
 ## Filling up the documentation
 
