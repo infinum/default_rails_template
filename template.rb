@@ -139,7 +139,8 @@ BIN_PREPARE_CI = <<~HEREDOC.strip_heredoc
   set -o pipefail
   set -o nounset
 
-  # leaving it here as it's required by the GHA
+  echo "=========== pull secrets ==========="
+  bundle exec secrets pull -e development -y
 HEREDOC
 create_file 'bin/prepare_ci', BIN_PREPARE_CI, force: true
 chmod 'bin/prepare_ci', 0755, verbose: false
