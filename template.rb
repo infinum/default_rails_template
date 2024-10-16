@@ -2,38 +2,359 @@ BASE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/mas
 
 # Readme.md
 README_MD = <<-HEREDOC.strip_heredoc
-[![Build Status](https://docs.semaphoreci.com/essentials/status-badges/)](https://semaphoreci.com/infinum/APP)
+[![build](https://github.com/infinum/project-name/actions/workflows/build.yml/badge.svg)](https://github.com/infinum/project-name/actions/workflows/build.yml)
 ![Health score](https://revisor.infinum.com/api/v1/badges/add-project-key?type=health_score)
 ![CVE count](https://revisor.infinum.com/api/v1/badges/add-project-key?type=cve_count)
 
 # README
 
-## [Technical Documentation](docs/README.md)
+# Table of Contents
 
-## Dependencies
+- [Prerequisites](#prerequisites)
+   - [Organizational Access](#organizational-access)
+   - [Development Access](#development-access)
+- [Architecture](#architecture)
+- [Development setup](#development-setup)
+- [Environments](#environments)
+- [Deployment](#deployment)
+- [Console Access](#console-access)
+  - [Staging](#staging)
+  - [Production](#production)
+- [Workflow](#workflow)
+  - [Commits](#commits)
+  - [Branches](#branches)
+    - [Type](#types)
+  - [Pull Requests](#pull-requests)
+    - [Labels](#labels)
+    - [Solving Change Requests](#solving-change-requests)
+  - [Merging](#merging)
+    - [Staging](#staging-1)
+      - [Merge Methodology](#merge-methodology)
+    - [Production] (#production-1)
+      - [Merge Methodology](#merge-methodology)
+- [Test Suite]
 
-### System
-  * Ruby (defined in .ruby-version file)
-  * Node.js (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
-  * Yarn (defined in [package.json](https://classic.yarnpkg.com/en/docs/package-json/#toc-engines))
+## Prerequisites
 
-## Setup
+Before you start working on the project, you need to get access to project-related items and install system
+dependencies.
+
+### Organizational Access
+
+Ask the project manager to give you access to:
+
+* project in the project management software (productive, jira, etc) **LINK-TO-PROJECT** <!-- https://app.productive.io/path-to-project --> <!-- DEVELOPER -->
+* project Slack channels **LINK-TO-SLACK-CHANNELS** <!-- https://infinum.slack.com/path-to-project --> <!-- DEVELOPER -->
+* project Google Drive **LINK-TO-GOOGLE-DRIVE** <!-- https://drive.google.com//path-to-project --> <!-- DEVELOPER -->
+* project design (Figma, Sketch, etc) **LINK-TO-DESIGN** <!-- https://www.figma.com/path-to-project --> <!-- DEVELOPER -->
+
+### Development access
+
+Ask a devops to give you access to:
+
+* 1password vault - **VAULT-NAME** <!-- DEVELOPER -->
+* git repository - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
+* development and staging secrets - **LINK-TO-GIT-REPO** <!-- https://github.com/path-to-project --> <!-- DEVELOPER -->
+* bugsnag project - **LINK-TO-BUGSNAG** <!-- https://bugsnag.com/path-to-project --> <!-- DEVELOPER -->
+* semaphore project - **LINK-TO-SEMAPHORE** <!-- https://semaphoreci.com/path-to-project --> <!-- DEVELOPER -->
+* staging and/or UAT server
+<!-- any other project specific services that are required for development -->
+
+
+## Architecture
+
+### Main info
+
+* Framework: Ruby on Rails
+* Language: Ruby
+
+<!-- DEVELOPER -->
+<!-- if exists
+## Diagram
+
+![diagram](https://lucid.app/publicSegments/view/e1a4ca97-cf28-4b3b-8283-6e76a27f0158/image.png)
+-->
+
+### Aws Account
+
+* ACCOUNT-NAME (ACCOUNT-ID) <!-- infinum-dev (7021-9251-8610) --> <!-- DEVOPS -->
+<!-- * ACCOUNT-NAME (ACCOUNT-ID) [staging] --> <!-- if multiple AWS account add a [tag]-->
+
+### Infrastructure
+[terraform config](https://github.com/infinum/terraform-take-care/tree/master/environments/stage) <!-- DEVOPS -->
+
+<!-- DEVOPS -->
+<!-- if exists
+## Devops wiki
+[wiki](https://devops-wiki.infinum.co/books/projects/chapter/APP)
+-->
+
+### Application
+* ruby version: **RUBY VERSION** <!-- 2.7.1 --> <!-- DEVELOPER -->
+* node version: **NODE VERSION** <!-- 14.0.1 --> <!-- DEVELOPER -->
+* application dependencies <!-- DEVELOPER -->
+  <!-- * vips -->
+
+### Database
+* extensions: <!-- DEVELOPER -->
+  <!-- * unaccent -->
+
+### 3rd party services
+
+ <!-- DEVELOPER -->
+* [Bugsnag](https://app.bugsnag.com/infinum/APP)
+  * notifies to **#project-app-alerts**
+* [GHA](https://github.com/infinum/rails-infinum-guess_who/actions/)
+  * notifies to **#project-app-alerts**
+* [Mailgun](https://mailgun.com)
+  * staging account: **mailgun.staging@infinum.hr**
+  * production account: **mailgun.APP@infinum.com**
+
+
+## Development Setup
 
 Run:
+
 ```bash
 ./bin/setup
 ```
 
-Run after each git pull:
+Ensure all tests pass with:
+Run:
+
 ```bash
-./bin/update
+bin/rspec
 ```
 
-## Test suite
-Run:
+## Environments
+
+* staging <stg>: [staging-project-name](https://staging-api-url)
+ * documentation: [documentation-endpoint](https://staging-api-url/api/v1/docs/)
+ * frontend: [staging-frontend-app-name](https://staging-app-url)
+* production <prod>: [production-project-name](https://production-api-url)
+  * frontend: [prod-frontend-app-name](https://production-app-url)
+
+## Deployment
+[Github Actions](https://github.com/APP-REPO-NAME/actions)
+
+### Builds
+Our continuous integration tool will automatically build the environment upon each push to whatever branch.
+The build installs all dependencies and runs all the specs
+
+### Deploying
+The `staging` branch is used for the staging environment and `master` for production.
+Whenever a branch or pull request is merged to one of those environments, after the build is finished Semaphore will try to deploy it to the environment.
+
+
+## Console Access
+
+### Staging
+
+'mina staging console'
+
+### Production
+
+'mina production console
+
+## Workflow
+
+### Commits
+
+Commits should have a descriptive subject as well as a quick explanation of the reason for the change in the commit body.
+This makes it easier to check changes in the code editor as you do not have to find the pull request and open it on github.
+These commit bodies can also be used to fill the content of the pull request if you wish.
+
+### Branches
+
+Branches should be opened from the master branch. Naming convention is {type}/{task-number}-{descriptive-task-name}
+
+#### Types:
+
+- feature
+
+  A new feature or an improvement to an existing feature
+
+- fix
+
+  A non-critical bugfix, improvement, paying technical debt. Goes through code review process.
+
+- hotfix
+
+  A time sensitive critical bugfix, that should be deployed to production as soon as possible.
+  Not necessary that it goes through code review, but it should be revisited at a later stage, and properly fixed or improved.
+
+### Pull Requests
+
+Once the feature or fix is done, a PR for it should be opened. We have a pull request template with placeholders for all relevant data that should be included.
+Code-owners are automatically assigned as reviewers
+
+#### Labels
+
+We are using labels on PRs to visually mark the different states of the PRs.
+
+- 'deployed to staging'
+- 'blocked' - blocked by a third party
+- 'code review' - explicit review needed before deploy to staging
+- 'waiting on QA' - waiting for QA confirmation on staging
+
+#### Solving Change Requests
+
+Change requests should be fixed in separate fixup or squash commits. Rebasing the branch during an ongoing review is not
+appreciated unless there is a good reason for it, like pulling in some new and necessary changes from master, because it
+makes harder for the reviewers to know what the new changes are and what they already reviewed.
+
+These commits should be merged into staging as well when they are done.
+
+### Merging
+
+#### Staging
+
+Once the PR is opened, the feature can be merged into staging (PR label: `deployed to staging`), unless it contains
+considerable logic in the migrations, in which case the reviewers should prioritize reviewing the migrations first (PR
+label: `code review`), and giving a thumbs up for a merge into staging (PR label: `deployed to staging`).
+
+##### Merge Methodology
+
+We are doing merge-squashes to staging, as well of resets of the staging branch to master after each
+sprint, or more frequently as we see fit.
+
+We are usually doing merge squashes by cherry-picking a commit range.
+Cherry-picking usually produces less merge conflicts once master and target branch diverge.
+
+Note that BASE-OF-BRANCH is one commit prior of
+the first commit of the branch.
+
 ```bash
-bundle exec rspec
+git switch staging
+git fetch origin staging && git pull --rebase
+git cherry-pick -n {BASE-OF-BRANCH}..{feature-branch}
 ```
+
+The commit message should be in the following format.
+
+```
+Merge-squash {feature-branch}
+
+(pull request {pull-request-link})
+[optionally](cherry picked from {commit-sha})
+```
+
+Including the pull request link makes github pick up that commit in the pull request, so we can know directly in
+the pull request, when was the branch deployed to staging.
+
+Run the specs, check if everything is ok, then push 🎉
+
+#### Master (Production)
+
+Once the PR has at least 1 approval, the branch was successfully deployed to staging and tested, deployed to UAT and
+confirmed by the client, and there are no failing specs, it can be merged into master.
+
+##### Merge Methodology
+
+There are generally 2 ways we are merging PRs to Master.
+With `git merge --squash` (squash and merge button on GitHub) or non fast forward merge.
+Each of these is project specific and should be agreed upon which would be used when starting the project.
+
+Squash and merge way:
+
+While on a feature branch:
+
+```bash
+git fetch origin master
+git rebase -i origin/master
+git push --force
+```
+
+Check once again that everything was rebased correctly and continue on the master branch:
+
+```bash
+git fetch origin master
+git switch master && git pull
+git merge --squash {feature-branch}
+```
+
+Then commit the new changes with a message of this format
+{pr-title} ({pr-number})
+
+{pr-description}
+
+
+```bash
+Methodology/squash and merge with default to pr title and description (#9)
+    
+TASK:
+[#732](https://app.productive.io/1-infinum/projects/2274/tasks/task/3497433?board=291038&filter=MjA2MTY2&task-list=631567)
+
+Problem:
+What we discussed
+
+Solution:
+Thingy, do the thingy
+```bash
+
+*Note*: when doing merge-squash through terminal you will need to manually close the PR, as opposed to using the Squash and merge on GitHub
+
+Non fast forward merge way:
+
+Follow the squash and merge way, but change `git merge --squash {feature-branch}` with `git merge --no-ff --no-edit {feature-branch}`
+
+
+Make sure the history graph is nice and clean by entering the following command or similanr and make sure that no lines "cross over".
+
+```bash
+git log --oneline --graph
+```
+
+Bad:
+
+```bash
+*   1b82b9f (HEAD -> master) Merge branch 'feature/add-git-process-to-readme'
+|\
+| * a25b3dc (origin/feature/add-git-process-to-readme, feature/add-git-process-to-readme) Add git process to readme
+* |   bfe1152 (origin/master) Merge branch 'feature/xx-some-other-feature'
+|\ \
+| |/
+|/|
+| * 3345dbb Some other feature subject
+|/
+*   7eade95 Merge branch 'feature/xx-another-other-feature'
+|\
+| * 0a80385 Another feature subject
+|/
+*
+```
+
+Good:
+
+# Merge-squash
+```bash
+* ba19c66 (HEAD -> cve/fix-rack-and-nokogiri-cves, origin/cve/fix-rack-and-nokogiri-cves) Update rack to 2.2.7 and nokogiri to 1.14.4 to fix CVES
+* 52bfab2 (origin/master, origin/HEAD, master) Update rack to 2.2.6.4 (#40)
+* ae1621a Upgrade rails to 7.0.4.3 to fix CVE (#39)
+* 3e8d526 Update rack to 2.2.6.3 to fix CVE (#38)
+* 2c98a9a Upgrade rack and globalid to fix cves (#37)
+* d8bb387 Upgrade rails to 7.0.4.1 (#36)
+```
+
+# Non fast forward merge 
+```bash
+*   1a164b4 (HEAD -> master) Merge branch 'feature/add-git-process-to-readme'
+|\
+| * 222sad5 (feature/add-something-more) Something more is added
+| * 497dcd7 (origin/feature/add-git-process-to-readme, feature/add-git-process-to-readme) Add git process to readme
+|/
+*   bfe1152 (origin/master) Merge branch 'feature/xx-some-other-feature'
+|\
+| * 3345dbb Some other feature subject
+|/
+*   7eade95 Merge branch 'feature/xx-another-other-feature'
+|\
+| * 0a80385 Another feature subject
+|/
+*
+```
+
+Double check everything, run the specs locally and push 🎉
 
 HEREDOC
 
