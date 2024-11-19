@@ -35,6 +35,16 @@ For build workflow to work, the following secrets must exist (usually set up by 
 
 For deploy workflows, you need to generate private/public SSH key pairs for each environment. Public key should be added to the server to which you're deploying. Private key should be added as a secret to GitHub and named `SSH_PRIVATE_KEY_#{ENVIRONMENT}`, where `ENVIRONMENT` is replaced with an appropriate environment name (`STAGING`, `PRODUCTION`, etc.).
 
+### Flipper
+
+This template uses Flipper for feature flag management. There are two ways for Flipper to function: **Cloud** and **Cloudless**. Cloudless will work out of the box, but if we want Flipper to be communicating with Flipper cloud there are a couple of secrets that need to be set:
+
+- `FLIPPER_CLOUD_TOKEN` - needed for our App to be able to communicate with Flipper Cloud
+- `FLIPPER_CLOUD_SYNC_SECRET` - used if we want Flipper Cloud to send a webhook request to our app telling it to sync with Cloud
+
+Both of these secrets are available inside the Flipper Cloud dashboard, and need to be configured per environment
+
+
 #### Slack notifications
 
 Build and deploy workflows can send Slack notifications upon completion of workflow runs. To enable this, add the following to the workflow:
