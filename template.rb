@@ -281,6 +281,38 @@ environment <<~HEREDOC, env: 'development'
   end
 HEREDOC
 
+# Flipper
+
+if no?('Will this application use ActiveRecord adapter for Flipper? If no, Redis will be used. [Yes]', :green)
+  append_to_file 'Gemfile', after: /gem "rails".*\n/ do
+    <<~HEREDOC.strip_heredoc
+
+    gem 'flipper-redis'
+    gem 'flipper-cloud'
+    HEREDOC
+  end
+else
+  append_to_file 'Gemfile', after: /gem "rails".*\n/ do
+    <<~HEREDOC.strip_heredoc
+
+        gem 'flipper-active_record'
+        gem 'flipper-cloud'
+    HEREDOC
+  end
+
+  run 'rails g flipper:setup'
+end
+
+FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
+    ENV['FLIPPER_CLOUD_TOKEN'] = Rails.application.secrets.fetch(:flipper_token)
+    ENV["FLIPPER_CLOUD_SYNC_SECRET"] = Rails.application.secrets.fetch(:flipper_sync_secret)
+  Rails.application.configure do
+    config.flipper.memoize = false
+  end
+HEREDOC
+
+create_file 'config/flipper.rb', FLIPPER_CONFIG_FILE, force: true
+
 # Suppress Puma SignalException
 append_to_file 'config/puma.rb', after: /pidfile ENV.*\n/ do
   <<~RUBY
@@ -315,6 +347,9 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
 
     redis_url: <%= Figaro.env.redis_url! %>
 
+    flipper_cloud_token: <%= Figaro.env.flipper_cloud_token %>
+    flipper_webhook_sync_token: <%= Figaro.env.flipper_webhook_sync_token %>
+
   development:
     <<: *default
 
@@ -340,6 +375,9 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
    bugsnag_api_key: ''
 
    redis_url: 'redis://localhost:6379'
+
+   flipper_cloud_token: ''
+   flipper_webhook_sync_token: ''
 
    development:
      secret_key_base: #{SecureRandom.hex(64)}
