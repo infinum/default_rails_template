@@ -288,7 +288,6 @@ if no?('Will this application use ActiveRecord adapter for Flipper? If no, Redis
     <<~HEREDOC.strip_heredoc
 
     gem 'flipper-redis'
-    gem 'flipper-cloud'
     HEREDOC
   end
 else
@@ -296,7 +295,6 @@ else
     <<~HEREDOC.strip_heredoc
 
         gem 'flipper-active_record'
-        gem 'flipper-cloud'
     HEREDOC
   end
 
@@ -304,10 +302,12 @@ else
 end
 
 FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
-    ENV['FLIPPER_CLOUD_TOKEN'] = Rails.application.secrets.fetch(:flipper_token)
-    ENV["FLIPPER_CLOUD_SYNC_SECRET"] = Rails.application.secrets.fetch(:flipper_sync_secret)
   Rails.application.configure do
-    config.flipper.memoize = false
+    config.flipper.memoize = false # for some reason webhook requests are being called twice without this
+
+    config.after_initialize do # if we are using webhooks, this will make sure our flags are synchronized upon initialization
+      Flipper.sync
+    end
   end
 HEREDOC
 
@@ -347,9 +347,6 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
 
     redis_url: <%= Figaro.env.redis_url! %>
 
-    flipper_cloud_token: <%= Figaro.env.flipper_cloud_token %>
-    flipper_webhook_sync_token: <%= Figaro.env.flipper_webhook_sync_token %>
-
   development:
     <<: *default
 
@@ -376,8 +373,8 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
 
    redis_url: 'redis://localhost:6379'
 
-   flipper_cloud_token: ''
-   flipper_webhook_sync_token: ''
+   FLIPPER_CLOUD_TOKEN: ''
+   FLIPPER_CLOUD_SYNC_SECRET: ''
 
    development:
      secret_key_base: #{SecureRandom.hex(64)}
