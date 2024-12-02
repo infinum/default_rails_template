@@ -1,3 +1,5 @@
+require 'tty-prompt'
+
 BASE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master'.freeze
 
 # Readme.md
@@ -281,6 +283,37 @@ environment <<~HEREDOC, env: 'development'
   end
 HEREDOC
 
+# Flipper
+
+prompt = TTY::Prompt.new
+flipper_storage_adapter = prompt.select("Will you use ActiveRecord or Redis storage adapter for Flipper?", %w(ActiveRecord Redis))
+
+append_to_file 'Gemfile', after: /gem "rails".*\n/ do
+  if flipper_storage_adapter == 'ActiveRecord'
+    <<~HEREDOC.strip_heredoc
+
+      gem 'flipper-active_record'
+    HEREDOC
+  else
+    <<~HEREDOC.strip_heredoc
+
+      gem 'flipper-redis'
+    HEREDOC
+  end
+end
+
+FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
+  Rails.application.configure do
+    config.flipper.memoize = false # for some reason webhook requests are being called twice without this, more on this link: https://github.com/flippercloud/flipper/pull/523
+
+    config.after_initialize do # if we are using webhooks, this will make sure our flags are synchronized upon initialization
+      Flipper.sync
+    end
+  end
+HEREDOC
+
+create_file 'config/flipper.rb', FLIPPER_CONFIG_FILE, force: true
+
 # Suppress Puma SignalException
 append_to_file 'config/puma.rb', after: /pidfile ENV.*\n/ do
   <<~RUBY
@@ -340,6 +373,9 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
    bugsnag_api_key: ''
 
    redis_url: 'redis://localhost:6379'
+
+   FLIPPER_CLOUD_TOKEN: ''
+   FLIPPER_CLOUD_SYNC_SECRET: ''
 
    development:
      secret_key_base: #{SecureRandom.hex(64)}
@@ -726,6 +762,11 @@ rails_command 'generate strong_migrations:install'
 run 'overcommit --install'
 run 'overcommit --sign'
 run 'overcommit --sign pre-push'
+
+## Flipper setup for active record adapter
+if flipper_storage_adapter == 'ActiveRecord'
+  run 'rails g flipper:setup'
+end
 
 # Fix default rubocop errors
 run 'bundle exec rubocop -A'
