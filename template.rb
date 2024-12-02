@@ -304,7 +304,7 @@ end
 
 FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
   Rails.application.configure do
-    config.flipper.memoize = false # for some reason webhook requests are being called twice without this
+    config.flipper.memoize = false # for some reason webhook requests are being called twice without this, more on this link: https://github.com/flippercloud/flipper/pull/523
 
     config.after_initialize do # if we are using webhooks, this will make sure our flags are synchronized upon initialization
       Flipper.sync
