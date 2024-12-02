@@ -1,3 +1,5 @@
+require 'tty-prompt'
+
 BASE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master'.freeze
 
 # Readme.md
@@ -283,22 +285,21 @@ HEREDOC
 
 # Flipper
 
-if no?('Will this application use ActiveRecord adapter for Flipper? If no, Redis will be used. [Yes]', :green)
-  append_to_file 'Gemfile', after: /gem "rails".*\n/ do
+prompt = TTY::Prompt.new
+flipper_storage_adapter = prompt.select("Will you use ActiveRecord or Redis storage adapter for Flipper?", %w(ActiveRecord Redis))
+
+append_to_file 'Gemfile', after: /gem "rails".*\n/ do
+  if flipper_storage_adapter == 'ActiveRecord'
     <<~HEREDOC.strip_heredoc
 
-    gem 'flipper-redis'
+      gem 'flipper-active_record'
     HEREDOC
-  end
-else
-  append_to_file 'Gemfile', after: /gem "rails".*\n/ do
+  else
     <<~HEREDOC.strip_heredoc
 
-        gem 'flipper-active_record'
+      gem 'flipper-redis'
     HEREDOC
   end
-
-  run 'rails g flipper:setup'
 end
 
 FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
@@ -784,6 +785,11 @@ if uses_frontend
   rails_command 'css:install:tailwind'
   rails_command 'turbo:install'
   rails_command 'stimulus:install'
+end
+
+## Flipper setup for active record adapter
+if flipper_storage_adapter == 'ActiveRecord'
+  run 'rails g flipper:setup'
 end
 
 # Fix default rubocop errors
