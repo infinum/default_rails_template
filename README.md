@@ -37,7 +37,7 @@ For deploy workflows, you need to generate private/public SSH key pairs for each
 
 ### Flipper
 
-This template uses Flipper for feature flag management. There are two ways for Flipper to function: **Cloud** and **Cloudless**. Cloudless will work out of the box, but if we want Flipper to be communicating with Flipper cloud there are a couple of secrets that need to be set:
+This template uses Flipper for feature flag management. There are two ways for Flipper to function: **Cloud** and **Cloudless(Self-hosted)**. Cloudless will work out of the box, but if we want Flipper to be communicating with Flipper cloud there are a couple of secrets that need to be set:
 
 - `FLIPPER_CLOUD_TOKEN` - needed for our App to be able to communicate with Flipper Cloud
 - `FLIPPER_CLOUD_SYNC_SECRET` - used if we want Flipper Cloud to send a webhook request to our app telling it to sync with Cloud
