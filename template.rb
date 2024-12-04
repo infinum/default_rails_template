@@ -604,7 +604,7 @@ end
 uses_frontend = yes?('Will this application have a frontend? [No]', :green)
 if uses_frontend
   append_to_file 'Gemfile', after: "gem 'pry-rails'\n" do
-    <<-HEREDOC.strip_heredoc
+    <<~HEREDOC
       gem 'slim'
       gem 'jsbundling-rails'
       gem 'cssbundling-rails'
