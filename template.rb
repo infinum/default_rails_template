@@ -221,7 +221,7 @@ HEREDOC
 create_file 'config/initializers/bugsnag.rb', BUGSNAG_CONFIG
 
 # Remove gems we don't use.
-%w(jbuilder tzinfo-data byebug web-console).each do |unwanted_gem|
+%w(jbuilder tzinfo-data byebug web-console importmap-rails brakeman rubocop-rails-omakase turbo-rails stimulus-rails).each do |unwanted_gem|
   gsub_file('Gemfile', /gem "#{unwanted_gem}".*\n/, '')
 end
 
@@ -601,13 +601,21 @@ else
 end
 
 ## Frontend
-if yes?('Will this application have a frontend? [No]', :green)
+uses_frontend = yes?('Will this application have a frontend? [No]', :green)
+if uses_frontend
   append_to_file 'Gemfile', after: "gem 'pry-rails'\n" do
-    "gem 'slim'\n"
+    <<~HEREDOC
+      gem 'slim'
+      gem 'jsbundling-rails'
+      gem 'cssbundling-rails'
+      gem 'view_component'
+      gem 'stimulus-rails'
+      gem 'turbo-rails'
+    HEREDOC
   end
 
   append_to_file 'Gemfile', after: " gem 'rubocop-infinum', require: false\n" do
-    "    gem 'slim_lint', require: false\n"
+    "  gem 'slim_lint', require: false\n"
   end
 
   get("#{BASE_URL}/.slim-lint.yml", '.slim-lint.yml')
@@ -696,6 +704,14 @@ end
 
 # Finish
 
+# enable Rails.application.secrets
+application <<~HEREDOC
+  def secrets
+    config_for(:secrets)
+  end
+
+HEREDOC
+
 ## Bundle install
 run 'bundle install'
 
@@ -726,6 +742,14 @@ rails_command 'generate strong_migrations:install'
 run 'overcommit --install'
 run 'overcommit --sign'
 run 'overcommit --sign pre-push'
+
+# Install frontend gems
+if uses_frontend
+  rails_command 'javascript:install:esbuild'
+  rails_command 'css:install:tailwind'
+  rails_command 'turbo:install'
+  rails_command 'stimulus:install'
+end
 
 # Fix default rubocop errors
 run 'bundle exec rubocop -A'
