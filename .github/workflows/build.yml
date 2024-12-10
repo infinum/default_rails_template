@@ -31,7 +31,7 @@ on:
       runner:
         required: false
         type: string
-        default: ubuntu-20.04
+        default: ubuntu-22.04
 
       # Defines which scripts will run on CI
       # Format: space-delimited paths to scripts

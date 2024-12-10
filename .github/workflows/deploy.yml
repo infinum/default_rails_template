@@ -37,7 +37,7 @@ on:
       runner:
         required: false
         type: string
-        default: ubuntu-20.04
+        default: ubuntu-22.04
 
       # Defines the Slack channel to which a notification will be sent upon completion of the workflow
       # Format: channel name (without the #)
