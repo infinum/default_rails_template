@@ -285,8 +285,9 @@ HEREDOC
 
 # Flipper
 
-prompt = TTY::Prompt.new
-flipper_storage_adapter = prompt.select("Will you use ActiveRecord or Redis storage adapter for Flipper?", %w(ActiveRecord Redis))
+flipper_storage_adapter = ask('Will you use ActiveRecord or Redis storage adapter for Flipper? [Default: ActiveRecord]', :green)
+
+flipper_storage_adapter = 'ActiveRecord' unless flipper_storage_adapter == 'Redis'
 
 append_to_file 'Gemfile', after: /gem "rails".*\n/ do
   if flipper_storage_adapter == 'ActiveRecord'
@@ -787,7 +788,6 @@ if uses_frontend
   rails_command 'stimulus:install'
 end
 
-## Flipper setup for active record adapter
 if flipper_storage_adapter == 'ActiveRecord'
   run 'rails g flipper:setup'
 end
