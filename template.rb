@@ -35,6 +35,210 @@ Run:
 bundle exec rspec
 ```
 
+## PR Workflow
+
+### Commits
+
+Commits should have a descriptive subject as well as a quick explanation of the reason for the change in the commit
+body.
+This makes it easier to check changes in the code editor as you do not have to find the pull request and open it
+on github.
+These commit bodies can also be used to fill the content of the pull request if you wish.
+
+### Branches
+
+Branches should be opened from the master branch. Naming convention is {type}/{task-number}{descriptive-task-name}
+
+#### Types:
+
+- feature
+
+  A new feature or an improvement to an existing feature.
+
+- fix
+
+  A non-critical bugfix, improvement, paying the technical debt. Goes through code review process.
+
+- hotfix
+
+  A time sensitive critical bugfix, that should be deployed to production as soon as possible. Not necessary that it
+  goes through code review, but it should be revisited at a later stage, and properly fixed or improved.
+
+### Pull Requests
+
+Once the feature or fix is done, a PR for it should be opened. We have a pull request template with placeholders for all
+relevant data that should be included. Code-owners are automatically assigned as reviewers.
+
+#### Labels
+
+We're using labels on PRs to visually mark the different states of the PRs. Some are self-explanatory, others have an
+additional description on github.
+
+#### Solving Change Requests
+
+Change requests should be fixed in separate fixup or squash commits. Rebasing the branch during an ongoing review is not
+appreciated unless there is a good reason for it, like pulling in some new and necessary changes from master, because it
+makes harder for the reviewers to know what the new changes are and what they already reviewed.
+
+### Staging
+
+Once the PR is opened, the feature can be merged into staging,
+unless it contains considerable logic in the migrations,
+in which case the reviewers should prioritize reviewing the migrations first
+and giving a thumbs up for a merge into staging.
+
+##### Merge Methodology
+
+We are doing merge-squashes to staging, as well of resets of the stanging branch to master after each
+sprint, or more frequently as we see fit.
+
+We are usually doing merge squashes by cherry-picking a commit range.
+Cherry picking usually produces less merge conflicts once master and target branch diverge.
+
+```bash
+git switch staging
+git fetch origin staging && git pull --rebase
+git cherry-pick -n {BASE-OF-BRANCH}..{feature-branch}
+```
+
+Note that BASE-OF-BRANCH is one commit prior of the first commit of the branch.
+
+The commit message should be in the following format.
+
+```
+Merge-squash {feature-branch}
+
+(pull request {pull-request-link})
+[optionally](cherry picked from {commit-sha})
+```
+
+Including the pull request link makes github pick up that commit in the pull request, so we can know directly in
+the pull request, when was the branch deployed to staging.
+
+Run the specs, check if everything is ok, then push 🎉
+
+### Master (Production)
+
+Once the PR has at least 1 approval, the branch was successfully deployed to staging, tested,
+and there are no failing specs, it can be merged into master.
+
+##### Merge methodology
+
+There are generally 2 ways we can merge PRs to Master:
+with `git merge --squash` (squash and merge button on GitHub) or non fast forward merge.
+Each of these is project specific and should be agreed upon which one would be used when starting the project.
+
+Once you agree you should update README accordingly.
+
+Before merging we're also rebasing the feature branch on the latest master, so that the git history is nice and clean,
+and that the latest code can be run on CI before actually merging into master.
+We're also squashing the review comments corrections here, so make sure the `--autosquash` option is on by default
+or add that flag to the rebase command.
+
+Squash and merge way:
+
+Squash and merge combines all the commits from a feature branch into a single new commit on the master.
+The history of individual commits from the feature branch is not preserved in the master branch.
+
+While on a feature branch:
+
+```bash
+git fetch origin master
+git rebase -i origin/master
+git push --force
+```
+
+Check once again that everything was rebased correctly and continue on the master branch:
+
+```bash
+git fetch origin master
+git switch master && git pull
+git merge --squash {feature-branch}
+```
+
+Then commit the new changes with a message of this format:
+
+```bash
+{pr-title} ({pr-number})
+
+{pr-description}
+
+
+```
+
+*Note*: When doing merge-squash through terminal you will need to manually close the PR,
+as opposed to using the Squash and merge on GitHub
+
+
+Non fast forward merge way:
+
+Non fast forward merge creates a merge commit in the master that references the last commit on the feature branch
+and the last commit on the master branch.
+Preserves the history of the feature branch including all individual commits.
+
+Follow the squash and merge way,
+but change `git merge --squash {feature-branch}` with `git merge --no-ff --no-edit {feature-branch}`
+
+
+Make sure the history graph is nice and clean by entering the following command or similar and making sure that no
+lines "cross over".
+
+```bash
+git log --oneline --graph
+```
+
+Bad:
+
+```bash
+*   1b82b9f (HEAD -> master) Merge branch 'feature/add-git-process-to-readme'
+|\\
+| * a25b3dc (origin/feature/add-git-process-to-readme, feature/add-git-process-to-readme) Add git process to readme
+* |   bfe1152 (origin/master) Merge branch 'feature/xx-some-other-feature'
+|\\ \\
+| |/
+|/|
+| * 3345dbb Some other feature subject
+|/
+*   7eade95 Merge branch 'feature/xx-another-other-feature'
+|\\
+| * 0a80385 Another feature subject
+|/
+*
+```
+
+Good:
+
+Merge-squash:
+
+```bash
+* ba19c66 (HEAD -> cve/fix-rack-and-nokogiri-cves, origin/cve/fix-rack-and-nokogiri-cves) Update rack to 2.2.7 and nokogiri to 1.14.4 to fix CVES
+* 52bfab2 (origin/master, origin/HEAD, master) Update rack to 2.2.6.4 (#40)
+* ae1621a Upgrade rails to 7.0.4.3 to fix CVE (#39)
+* 3e8d526 Update rack to 2.2.6.3 to fix CVE (#38)
+* 2c98a9a Upgrade rack and globalid to fix cves (#37)
+* d8bb387 Upgrade rails to 7.0.4.1 (#36)
+```
+
+Non fast forward merge:
+
+```bash
+*   1a164b4 (HEAD -> master) Merge branch 'feature/add-git-process-to-readme'
+|\\
+| * 497dcd7 (origin/feature/add-git-process-to-readme, feature/add-git-process-to-readme) Add git process to readme
+|/
+*   bfe1152 (origin/master) Merge branch 'feature/xx-some-other-feature'
+|\\
+| * 3345dbb Some other feature subject
+|/
+*   7eade95 Merge branch 'feature/xx-another-other-feature'
+|\\
+| * 0a80385 Another feature subject
+|/
+*
+```
+
+Double check everything, run the specs locally and then push 🎉
+
 HEREDOC
 
 create_file 'README.md', README_MD, force: true
