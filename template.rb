@@ -1,5 +1,3 @@
-require 'tty-prompt'
-
 BASE_URL = 'https://raw.githubusercontent.com/infinum/default_rails_template/master'.freeze
 
 # Readme.md
