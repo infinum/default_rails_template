@@ -118,7 +118,7 @@ jobs:
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name }}-
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
       - name: Set up Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
