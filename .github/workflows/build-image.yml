@@ -85,7 +85,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Cache test image layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-test
           key: docker-build-test-${{ github.sha }}
@@ -156,7 +156,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Cache deploy image layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         with:
           path: /tmp/.buildx-cache-deploy
