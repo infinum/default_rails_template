@@ -121,7 +121,7 @@ jobs:
         with:
           node-version-file: '.node-version'
       - name: Prepare node_modules cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ inputs.use_node }}
         with:
           path: node_modules
