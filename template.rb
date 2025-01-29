@@ -397,12 +397,6 @@ CommitMsg:
     enabled: true
 
 PreCommit:
-  BundleAudit:
-    enabled: true
-    flags: ['--update']
-    on_warn: fail
-    command: ['bundle', 'exec', 'bundle-audit']
-
   BundleCheck:
     enabled: true
 
@@ -421,16 +415,6 @@ PreCommit:
 
   HardTabs:
     enabled: true
-
-PrePush:
-  Brakeman:
-    enabled: true
-    command: ['bundle', 'exec', 'brakeman']
-
-  ZeitwerkCheck:
-    enabled: true
-    description: 'Checks project structure for Zeitwerk compatibility'
-    command: ['bundle', 'exec', 'rails zeitwerk:check']
 HEREDOC
 create_file '.overcommit.yml', OVERCOMMIT_YML_FILE
 
@@ -492,29 +476,6 @@ updates:
 HEREDOC
 
 create_file '.github/dependabot.yml', DEPENDABOT_FILE
-
-# .git-hooks/pre_push/zeitwerk_check.rb
-ZEITWERK_CHECK_FILE = <<-HEREDOC.strip_heredoc
-# frozen_string_literal: true
-
-module Overcommit
-  module Hook
-    module PrePush
-      class ZeitwerkCheck < Base
-        def run
-          result = execute(command)
-          return :pass if result.success?
-
-          extract_messages result.stderr.split("\\n"),
-                           /^expected file (?<file>[[:alnum:]].*\.rb)/
-        end
-      end
-    end
-  end
-end
-HEREDOC
-
-create_file '.git-hooks/pre_push/zeitwerk_check.rb', ZEITWERK_CHECK_FILE
 
 # Ignore rubocop warnings in db/seeds.rb
 SEEDS_DISABLE_IGNORE = <<-HEREDOC.strip_heredoc
