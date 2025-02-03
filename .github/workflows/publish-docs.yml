@@ -131,7 +131,7 @@ jobs:
       - name: Install JS packages
         if: ${{ inputs.use_node }}
         run: yarn install --frozen-lockfile
-      - uses: webfactory/ssh-agent@v0.8.0
+      - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Prepare CI
