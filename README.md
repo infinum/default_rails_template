@@ -43,8 +43,8 @@ This template uses Flipper for feature flag management. There are two ways for F
 
 Flipper Cloudless does not provide a dashboard and as such we are adding `flipper-ui` for the dashboard. In order to properly set up Flipper UI with basic authentication we need to set up two secrets:
 
-- `flipper_username_hash`
-- `flipper_password_hash`
+- `flipper_username`
+- `flipper_password`
 
 
 #### Flipper Cloud setup

@@ -337,8 +337,8 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
 
     redis_url: <%= Figaro.env.redis_url! %>
 
-    flipper_username_hash: <%= Figaro.env.flipper_username_hash! %>
-    flipper_password_hash: <%= Figaro.env.flipper_password_hash! %>
+    flipper_username: <%= Figaro.env.flipper_username! %>
+    flipper_password: <%= Figaro.env.flipper_password! %>
 
   development:
     <<: *default
@@ -366,8 +366,8 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
 
    redis_url: 'redis://localhost:6379'
 
-   flipper_username_hash: "username_hash"
-   flipper_password_hash: "password_hash"
+   flipper_username: "username"
+   flipper_password: "password"
 
    development:
      secret_key_base: #{SecureRandom.hex(64)}
@@ -777,15 +777,15 @@ FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
   #  ActiveSupport::Notifications.subscribe(/flipper/, FlipperSubscriber.new)
 
 
-  FLIPPER_USERNAME_HASH = Rails.application.secrets(:flipper_username_hash)
-  FLIPPER_PASSWORD_HASH = Rails.application.secrets(:flipper_password_hash)
+  FLIPPER_USERNAME = Rails.application.secrets(:flipper_username)
+  FLIPPER_PASSWORD = Rails.application.secrets(:flipper_password)
 
   Flipper::AuthenticatedApp = Flipper::UI.app(Flipper.instance) do |builder|
     builder.use Rack::Auth::Basic, "Flipper Admin" do |username, password|
-      return false if FLIPPER_USERNAME_HASH.blank? || FLIPPER_PASSWORD_HASH.blank?
+      next false if FLIPPER_USERNAME.blank? || FLIPPER_PASSWORD.blank?
 
-        ActiveSupport::SecurityUtils.secure_compare(Digest::SHA256.hexdigest(username), FLIPPER_USERNAME_HASH) &&
-        ActiveSupport::SecurityUtils.secure_compare(Digest::SHA256.hexdigest(password), FLIPPER_PASSWORD_HASH)
+        ActiveSupport::SecurityUtils.secure_compare(Digest::SHA256.hexdigest(username), Digest::SHA256.hexdigest(FLIPPER_USERNAME)) &&
+        ActiveSupport::SecurityUtils.secure_compare(Digest::SHA256.hexdigest(password), Digest::SHA256.hexdigest(FLIPPER_PASSWORD))
     end
   end
 HEREDOC
