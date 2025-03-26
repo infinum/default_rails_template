@@ -500,6 +500,7 @@ end
 
 get("#{BASE_URL}/build.yml", '.github/workflows/build.yml')
 get("#{BASE_URL}/delete-cache.yml", '.github/workflows/delete-cache.yml')
+get("#{BASE_URL}/scan-licenses.yml", '.github/workflows/scan-licenses.yml')
 
 ## Docker
 if no?('Will this application use Docker? [Yes]', :green)
