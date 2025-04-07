@@ -53,6 +53,12 @@ on:
         required: false
         type: string
         default: all
+
+      # Determines whether to deploy application through AWS SSM tunnel
+      ssm_deploy:
+        required: false
+        type: boolean
+        default: false
     secrets:
       SSH_PRIVATE_KEY:
         required: true
@@ -64,6 +70,11 @@ on:
       # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }'
       ADDITIONAL_VARIABLES:
         required: false
+
+# Token used for storing AWS session
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
@@ -86,21 +97,44 @@ jobs:
             echo "ADDITIONAL_VARIABLES secret you supplied is not a valid JSON object. Check the formatting of the secret."
             exit 1
           fi
+
+      - name: Configure AWS Credentials
+        if: ${{ inputs.ssm_deploy }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Git checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
+      # Setup SSH configuration so mina connects to the instance over SSM proxy
+      - name: Setup ssh config for SSM
+        if: ${{ inputs.ssm_deploy }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "# SSH over Session Manager" >> ~/.ssh/config
+          echo "host i-* mi-*" >> ~/.ssh/config
+          echo "    StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "    ProxyCommand sh -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'\"" >> ~/.ssh/config
+
       - name: Prepare SSH agent
-        uses: webfactory/ssh-agent@v0.8.0
+        uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Deploy
         id: deploy
         run: bin/deploy ${{ inputs.environment }}
+
       - name: Notify on Slack
         env:
           SUCCESS: ${{ steps.deploy.outcome == 'success' }}
