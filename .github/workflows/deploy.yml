@@ -64,7 +64,11 @@ on:
         required: true
       SLACK_BOT_TOKEN:
         required: false
-
+      # AWS settings for SSM deployment. Passed as secrets for easier environment management (environment variables cannot be easily passed to the workflows)
+      AWS_ROLE:
+        required: false
+      AWS_REGION:
+        required: false
       # Additional environment variables set in the workflow
       # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
       # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }'
@@ -102,8 +106,8 @@ jobs:
         if: ${{ inputs.ssm_deploy }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE }}
-          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Git checkout
         uses: actions/checkout@v4
