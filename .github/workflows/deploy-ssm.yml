@@ -1,0 +1,207 @@
+name: Deploy
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+on:
+  workflow_call:
+    inputs:
+      # Sets the Mina environment (e.g. staging, production)
+      # A task by the same name must exist in config/deploy.rb
+      environment:
+        required: true
+        type: string
+
+      # Sets the Git branch which will be checked out
+      branch:
+        required: true
+        type: string
+
+      # Determines who can manually trigger the workflow
+      # Example: "@github_username1 @github_username2"
+      # See: https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
+      deployers:
+        required: false
+        type: string
+        default: ''
+
+      # Sets BUNDLE_APP_CONFIG environment variable
+      # See: https://bundler.io/man/bundle-config.1.html
+      bundle_app_config:
+        required: false
+        type: string
+        default: .bundle/ci-deploy
+
+      # Selects the runner on which the workflow will run
+      # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      runner:
+        required: false
+        type: string
+        default: ubuntu-22.04
+
+      # Defines the Slack channel to which a notification will be sent upon completion of the workflow
+      # Format: channel name (without the #)
+      # Example: 'my-channel-name'
+      slack_notification_channel:
+        required: false
+        type: string
+
+      # Defines on which events the notification is sent to the Slack channel defined in `slack_notification_channel` input
+      # By default, all events will trigger a notification
+      # Enum: success | failure | all
+      notify_on:
+        required: false
+        type: string
+        default: all
+    secrets:
+      SSH_PRIVATE_KEY:
+        required: true
+      SLACK_BOT_TOKEN:
+        required: false
+
+      # Additional environment variables set in the workflow
+      # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
+      # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }'
+      ADDITIONAL_VARIABLES:
+        required: false
+
+# Token used for storing AWS session
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 30
+    env:
+      BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
+    if: ${{ github.event_name == 'workflow_dispatch' && contains(inputs.deployers, format('@{0}', github.actor)) || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Set up additional environment variables
+        env:
+          ADDITIONAL_VARIABLES: ${{ secrets.ADDITIONAL_VARIABLES }}
+        if: ${{ env.ADDITIONAL_VARIABLES }}
+        run: >
+          if echo '${{ env.ADDITIONAL_VARIABLES }}' | jq >/dev/null 2>&1; then
+            echo '${{ env.ADDITIONAL_VARIABLES }}' | jq -r 'to_entries[] | "\(.key) \(.value)"' | \
+              while read -r key value; do echo "$key=$value" >> $GITHUB_ENV && echo "Variable $key has been set"; done
+          else
+            echo "ADDITIONAL_VARIABLES secret you supplied is not a valid JSON object. Check the formatting of the secret."
+            exit 1
+          fi
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      # Setup SSH configuration so mina connects to the instance over SSM proxy
+      - name: Setup ssh config for SSM
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "# SSH over Session Manager" >> ~/.ssh/config
+          echo "host i-* mi-*" >> ~/.ssh/config
+          echo "    StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "    ProxyCommand sh -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'\"" >> ~/.ssh/config
+
+      - name: Prepare SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy
+        id: deploy
+        run: bin/deploy ${{ inputs.environment }}
+
+      - name: Notify on Slack
+        env:
+          SUCCESS: ${{ steps.deploy.outcome == 'success' }}
+          FAILURE: ${{ steps.deploy.outcome == 'failure' }}
+          CHANNEL: ${{ inputs.slack_notification_channel }}
+          NOTIFY_ON: ${{ inputs.notify_on }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        if: ${{ always() && inputs.slack_notification_channel }}
+        run: |
+          if [ -z "$SLACK_BOT_TOKEN" ] ; then
+            echo "SLACK_BOT_TOKEN secret is missing from the workflow!"
+            exit 1
+          fi
+
+          if [[ "$NOTIFY_ON" != "success" && "$NOTIFY_ON" != "failure" && "$NOTIFY_ON" != "all" ]] ; then
+            echo "notify_on input is not valid. Must be one of: 'success', 'failure', or 'all'"
+            exit 1
+          fi
+
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          FULL_SHA=$(git rev-parse HEAD)
+          COMMIT_MESSAGE=$(git show -s --format=%s)
+          GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$FULL_SHA"
+
+          if [[ "$SUCCESS" = true && ("$NOTIFY_ON" = "success" || "$NOTIFY_ON" = "all") ]] ; then
+            curl -X POST https://slack.com/api/chat.postMessage \
+                 -H "Content-type: application/json; charset=utf-8" \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 -s -S \
+                 -d @- <<- EOF
+                  {
+                    "channel": "$CHANNEL",
+                    "attachments": [
+                      {
+                        "color": "#19a974",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "$GITHUB_ACTOR <$GITHUB_RUN_URL|deployed> to *$DEPLOY_ENVIRONMENT*! :tada: \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+          EOF
+          fi
+
+          if [[ "$FAILURE" = true && ("$NOTIFY_ON" = "failure" || "$NOTIFY_ON" = "all") ]] ; then
+            curl -X POST https://slack.com/api/chat.postMessage \
+                 -H "Content-type: application/json; charset=utf-8" \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 -s -S \
+                 -d @- <<- EOF
+                  {
+                    "channel": "$CHANNEL",
+                    "attachments": [
+                      {
+                        "color": "#f75819",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "$GITHUB_ACTOR failed to <$GITHUB_RUN_URL|deploy> to *$DEPLOY_ENVIRONMENT*! :boom: \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+          EOF
+          fi
