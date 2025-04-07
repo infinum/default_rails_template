@@ -84,6 +84,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ${{ inputs.runner }}
+    environment: ${{ inputs.environment }}
     timeout-minutes: 30
     env:
       BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
