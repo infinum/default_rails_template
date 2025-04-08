@@ -53,22 +53,38 @@ on:
         required: false
         type: string
         default: all
+
+      # Determines whether to deploy application through AWS SSM tunnel
+      ssm_deploy:
+        required: false
+        type: boolean
+        default: false
     secrets:
       SSH_PRIVATE_KEY:
         required: true
       SLACK_BOT_TOKEN:
         required: false
-
+      # AWS settings for SSM deployment. Passed as secrets for easier environment management (environment variables cannot be easily passed to the workflows)
+      AWS_ROLE:
+        required: false
+      AWS_REGION:
+        required: false
       # Additional environment variables set in the workflow
       # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
       # Example: '{ "FOO": "BAR", "BAZ": "${{ secrets.BAZ }}" }'
       ADDITIONAL_VARIABLES:
         required: false
 
+# Token used for storing AWS session
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     name: Deploy
     runs-on: ${{ inputs.runner }}
+    environment: ${{ inputs.environment }}
     timeout-minutes: 30
     env:
       BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
@@ -86,21 +102,33 @@ jobs:
             echo "ADDITIONAL_VARIABLES secret you supplied is not a valid JSON object. Check the formatting of the secret."
             exit 1
           fi
+
+      - name: Configure AWS Credentials
+        if: ${{ inputs.ssm_deploy }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Git checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
       - name: Prepare SSH agent
         uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Deploy
         id: deploy
         run: bin/deploy ${{ inputs.environment }}
+
       - name: Notify on Slack
         env:
           SUCCESS: ${{ steps.deploy.outcome == 'success' }}
