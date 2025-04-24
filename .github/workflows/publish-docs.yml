@@ -131,6 +131,20 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Setup SSH configuration on runner. Mina ssh_options are not used in mina-dox
+      - name: Setup ssh config for SSM
+        if: ${{ inputs.ssm_deploy }}
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          cat > ~/.ssh/config << 'EOF'
+          # SSH over Session Manager
+          host i-* mi-*
+            StrictHostKeyChecking no
+            ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+          EOF
+
       - name: Git checkout
         uses: actions/checkout@v4
         with:
