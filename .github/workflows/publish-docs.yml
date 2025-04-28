@@ -59,6 +59,11 @@ on:
         type: string
         default: all
 
+      # Determines whether to deploy application through AWS SSM tunnel
+      ssm_deploy:
+        required: false
+        type: boolean
+        default: false
     secrets:
       SSH_PRIVATE_KEY:
         required: true
@@ -72,6 +77,11 @@ on:
         required: true
       VAULT_AUTH_SECRET_ID:
         required: true
+      # AWS settings for SSM deployment. Passed as secrets for easier environment management (environment variables cannot be easily passed to the workflows)
+      AWS_ROLE:
+        required: false
+      AWS_REGION:
+        required: false
 
       # Additional environment variables set in the workflow
       # Format: JSON object with string values (key becomes env variable name, value becomes env variable value)
@@ -79,10 +89,16 @@ on:
       ADDITIONAL_VARIABLES:
         required: false
 
+# Token used for storing AWS session
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   publish_docs:
     name: 'Publish docs'
     runs-on: ${{ inputs.runner }}
+    environment: ${{ inputs.environment }}
     timeout-minutes: 30
     env:
       BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
@@ -107,19 +123,44 @@ jobs:
             echo "ADDITIONAL_VARIABLES secret you supplied is not a valid JSON object. Check the formatting of the secret."
             exit 1
           fi
+
+      - name: Configure AWS Credentials
+        if: ${{ inputs.ssm_deploy }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Setup SSH configuration on runner. Mina ssh_options are not used in mina-dox
+      - name: Setup ssh config for SSM
+        if: ${{ inputs.ssm_deploy }}
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          cat > ~/.ssh/config << 'EOF'
+          # SSH over Session Manager
+          host i-* mi-*
+            StrictHostKeyChecking no
+            ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+          EOF
+
       - name: Git checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
       - name: Set up Node
         uses: actions/setup-node@v4
         if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
+
       - name: Prepare node_modules cache
         uses: actions/cache@v4
         if: ${{ inputs.use_node }}
@@ -128,12 +169,15 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-modules-
+
       - name: Install JS packages
         if: ${{ inputs.use_node }}
         run: yarn install --frozen-lockfile
+
       - uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Prepare CI
         run: bin/prepare_ci
         if: hashFiles('bin/prepare_ci') != ''
@@ -142,13 +186,16 @@ jobs:
           VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
           VAULT_AUTH_ROLE_ID: ${{ secrets.VAULT_AUTH_ROLE_ID }}
           VAULT_AUTH_SECRET_ID: ${{ secrets.VAULT_AUTH_SECRET_ID }}
+
       - name: Wait for Postgres to be ready
         run: until docker exec postgres pg_isready; do sleep 1; done
+
       - name: Publish docs
         id: publish_docs
         run: 'bin/publish_docs ${{ inputs.environment }}'
         env:
           RAILS_ENV: test
+
       - name: Notify on Slack
         env:
           SUCCESS: ${{ steps.publish_docs.outcome == 'success' }}
