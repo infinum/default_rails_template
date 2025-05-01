@@ -1,0 +1,26 @@
+name: Scan licenses
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_call:
+
+jobs:
+  scanning:
+    runs-on: ubuntu-latest
+    name: License scanning
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Run license scanning
+        run: |
+          bundle config --local deployment false
+          bundle lock --add-platform x86_64-linux
+          bundle config --local deployment true
+          bundle exec license_finder
