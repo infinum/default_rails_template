@@ -39,108 +39,32 @@ bundle exec rspec
 
 ### Commits
 
-Commits should have a descriptive subject as well as a quick explanation of the reason for the change in the commit
-body.
-This makes it easier to check changes in the code editor as you do not have to find the pull request and open it
-on github.
-These commit bodies can also be used to fill the content of the pull request if you wish.
+Guidelines for writing commit messages are outlined in [this](https://infinum.com/handbook/rails/workflows/git/branches#other-important-notes-on-using-git) handbook chapter.
 
 ### Branches
 
-Branches should be opened from the master branch. Naming convention is {type}/{task-number}{descriptive-task-name}
-
-#### Types:
-
-- feature
-
-  A new feature or an improvement to an existing feature.
-
-- fix
-
-  A non-critical bugfix, improvement, paying the technical debt. Goes through code review process.
-
-- hotfix
-
-  A time sensitive critical bugfix, that should be deployed to production as soon as possible. Not necessary that it
-  goes through code review, but it should be revisited at a later stage, and properly fixed or improved.
+Our branch naming conventions are documented in [this](https://infinum.com/handbook/rails/workflows/git/branches) handbook chapter.
 
 ### Pull Requests
 
-Once the feature or fix is done, a PR for it should be opened. We have a pull request template with placeholders for all
-relevant data that should be included. Code-owners are automatically assigned as reviewers.
+See [this](https://infinum.com/handbook/rails/workflows/git/pull-requests) handbook chapter for pull requests guidelines.
 
 #### Labels
 
 We're using labels on PRs to visually mark the different states of the PRs. Some are self-explanatory, others have an
-additional description on github.
+additional description on GitHub.
 
 [TODO] Add list and descriptions of project-specific labels here.
 
 #### Solving Change Requests
 
-Change requests should be fixed in separate fixup or squash commits. Rebasing the branch during an ongoing review is not
-appreciated unless there is a good reason for it, like pulling in some new and necessary changes from master, because it
-makes harder for the reviewers to know what the new changes are and what they already reviewed.
+See [this](https://infinum.com/handbook/rails/workflows/git/clean-changes#solving-change-requests) handbook chapter for best practices on solving change requests.
 
-### Staging
+### Integration methodology
 
-Once the PR is opened, the feature can be merged into staging,
-unless it contains considerable logic in the migrations,
-in which case the reviewers should prioritize reviewing the migrations first
-and giving a thumbs up for a merge into staging.
+Check [this](https://infinum.com/handbook/rails/workflows/git/clean-changes#merging) handbook chapter for the integration methodology we use on the project.
 
-##### Merge Methodology
-
-We are doing merge-squashes to staging, as well of resets of the staging branch to master after each
-sprint, or more frequently as we see fit.
-
-We are usually doing merge squashes by cherry-picking a commit range.
-Cherry picking usually produces less merge conflicts once master and target branch diverge.
-
-```bash
-git switch staging
-git fetch origin staging && git pull --rebase
-git cherry-pick -n {BASE-OF-BRANCH}..{feature-branch}
-```
-
-Note that BASE-OF-BRANCH is one commit prior of the first commit of the branch.
-
-The commit message should be in the following format.
-
-```
-Merge-squash {feature-branch}
-
-(pull request {pull-request-link})
-[optionally](cherry picked from {commit-sha})
-```
-
-Including the pull request link makes github pick up that commit in the pull request, so we can know directly in
-the pull request, when was the branch deployed to staging.
-
-Run the specs, check if everything is ok, then push 🎉
-
-[TODO] If there is another environment present on the project, define the merge methodology for it.
-
-### Master (Production)
-
-Once the PR has at least 1 approval, the branch was successfully deployed to staging, tested,
-and there are no failing specs, it can be merged into master.
-
-##### Merge methodology
-
-Before merging we're also rebasing the feature branch on the latest master, so that the git history is nice and clean,
-and that the latest code can be run on CI before actually merging into master.
-We're also squashing the review comments corrections here, so make sure the `--autosquash` option is on by default
-or add that flag to the rebase command.
-
-[TODO]
-There are generally 2 ways we can merge PRs to Master:
-with `git merge --squash` (squash and merge button on GitHub) or non fast forward merge.
-Each of these is project specific and should be agreed upon which one would be used when starting the project.
-For more details on both metodologies, check [this](https://infinum.com/handbook/rails/workflows/git/clean-changes)
-Handbook chapter.
-Once you agree, you should replace this todo-paragraph with description of actual metodology being used.
-
+[TODO] Document any project-specific integration methodology if it differs from the one described in the handbook, or if the project includes additional environments.
 HEREDOC
 
 create_file 'README.md', README_MD, force: true
