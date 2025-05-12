@@ -19,6 +19,13 @@ on:
         type: boolean
         default: true
 
+      # Toggle Redis service
+      redis_image:
+        description: Redis version for running tests (eg. 6.2)
+        required: false
+        type: string
+        default: ''
+
       # Sets BUNDLE_APP_CONFIG environment variable
       # See: https://bundler.io/man/bundle-config.1.html
       bundle_app_config:
@@ -88,6 +95,15 @@ jobs:
         ports:
           - 5432:5432
         options: --name=postgres
+      redis:
+        image: ${{ inputs.redis_image && format('redis:{0}', inputs.redis_image) }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Set up additional environment variables
         env:
