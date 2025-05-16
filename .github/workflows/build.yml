@@ -20,15 +20,11 @@ on:
         default: true
 
       # Toggle Redis service
-      use_redis:
-        required: false
-        type: boolean
-        default: false
-
-      redis_version:
+      redis_image:
         description: Redis version for running tests (eg. 6.2)
         required: false
         type: string
+        default: ''
 
       # Sets BUNDLE_APP_CONFIG environment variable
       # See: https://bundler.io/man/bundle-config.1.html
@@ -91,7 +87,6 @@ jobs:
     env:
       BUNDLE_APP_CONFIG: ${{ inputs.bundle_app_config }}
       RUBOCOP_CACHE_ROOT: .rubocop-cache
-      REDIS_IMAGE: ${{ inputs.redis_version != '' && format('redis:{0}', inputs.redis_version) || 'redis' }}
     services:
       postgres:
         image: postgres:${{ inputs.postgres_image }}
@@ -101,8 +96,8 @@ jobs:
           - 5432:5432
         options: --name=postgres
       redis:
-        if: ${{ inputs.use_redis }}
-        image: ${{ env.REDIS_IMAGE }}
+        if: ${{ inputs.redis_image != '' }}
+        image: ${{ inputs.redis_image }}
         ports:
           - 6379:6379
         options: >-
