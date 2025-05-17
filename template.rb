@@ -35,6 +35,36 @@ Run:
 bundle exec rspec
 ```
 
+## PR Workflow
+
+### Commits
+
+Guidelines for writing commit messages are outlined in [this](https://infinum.com/handbook/rails/workflows/git/branches#other-important-notes-on-using-git) handbook chapter.
+
+### Branches
+
+Our branch naming conventions are documented in [this](https://infinum.com/handbook/rails/workflows/git/branches) handbook chapter.
+
+### Pull Requests
+
+See [this](https://infinum.com/handbook/rails/workflows/git/pull-requests) handbook chapter for pull requests guidelines.
+
+#### Labels
+
+We're using labels on PRs to visually mark the different states of the PRs. Some are self-explanatory, others have an
+additional description on GitHub.
+
+[TODO] Add list and descriptions of project-specific labels here.
+
+#### Solving Change Requests
+
+See [this](https://infinum.com/handbook/rails/workflows/git/clean-changes#solving-change-requests) handbook chapter for best practices on solving change requests.
+
+### Integration methodology
+
+Check [this](https://infinum.com/handbook/rails/workflows/git/clean-changes#merging) handbook chapter for the integration methodology we use on the project.
+
+[TODO] Document any project-specific integration methodology if it differs from the one described in the handbook, or if the project includes additional environments.
 HEREDOC
 
 create_file 'README.md', README_MD, force: true
