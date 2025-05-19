@@ -322,26 +322,16 @@ append_to_file 'Gemfile', after: /gem "rails".*\n/ do
     <<~HEREDOC.strip_heredoc
 
       gem 'flipper-active_record'
+      gem 'flipper-ui'
     HEREDOC
   else
     <<~HEREDOC.strip_heredoc
 
       gem 'flipper-redis'
+      gem 'flipper-ui'
     HEREDOC
   end
 end
-
-FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
-  Rails.application.configure do
-    config.flipper.memoize = false # for some reason webhook requests are being called twice without this, more on this link: https://github.com/flippercloud/flipper/pull/523
-
-    config.after_initialize do # if we are using webhooks, this will make sure our flags are synchronized upon initialization
-      Flipper.sync
-    end
-  end
-HEREDOC
-
-create_file 'config/flipper.rb', FLIPPER_CONFIG_FILE, force: true
 
 # Suppress Puma SignalException
 append_to_file 'config/puma.rb', after: /pidfile ENV.*\n/ do
@@ -377,6 +367,9 @@ SECRETS_YML_FILE = <<-HEREDOC.strip_heredoc
 
     redis_url: <%= Figaro.env.redis_url! %>
 
+    flipper_username: <%= Figaro.env.flipper_username! %>
+    flipper_password: <%= Figaro.env.flipper_password! %>
+
   development:
     <<: *default
 
@@ -403,8 +396,8 @@ FIGARO_FILE = <<-HEREDOC.strip_heredoc
 
    redis_url: 'redis://localhost:6379'
 
-   FLIPPER_CLOUD_TOKEN: ''
-   FLIPPER_CLOUD_SYNC_SECRET: ''
+   flipper_username: "username"
+   flipper_password: "password"
 
    development:
      secret_key_base: #{SecureRandom.hex(64)}
@@ -780,6 +773,105 @@ end
 if flipper_storage_adapter == 'ActiveRecord'
   run 'rails g flipper:setup'
 end
+
+FLIPPER_CONFIG_FILE = <<-HEREDOC.strip_heredoc
+  Flipper::UI.configure do |config|
+    config.descriptions_source = -> (keys) do
+      {
+        # when creating a new feature flag, insert its name and description here e.g.
+        # 'new_feature' => 'This is a new feature'
+      }
+    end
+    config.show_feature_description_in_list = true
+  end
+
+  Flipper::AuthenticatedApp = Flipper::UI.app(Flipper.instance) do |builder|
+    builder.use Rack::Auth::Basic, "Flipper Admin" do |username, password|
+      flipper_username = Rails.application.secrets(:flipper_username)
+      flipper_password = Rails.application.secrets(:flipper_password)
+
+      next false if flipper_username.blank? || flipper_password.blank?
+
+      ActiveSupport::SecurityUtils.secure_compare(Digest::SHA256.hexdigest(username), Digest::SHA256.hexdigest(flipper_username)) &&
+        ActiveSupport::SecurityUtils.secure_compare(Digest::SHA256.hexdigest(password), Digest::SHA256.hexdigest(flipper_password))
+    end
+  end
+HEREDOC
+
+create_file 'config/initializers/flipper.rb', FLIPPER_CONFIG_FILE, force: true
+
+if flipper_storage_adapter == 'ActiveRecord'
+  prepend_to_file 'config/initializers/flipper.rb' do
+    <<~HEREDOC
+      # This fixes Flipper ActiveRecord rails 8 issue: https://github.com/flippercloud/flipper/issues/917
+      Rails.application.configure do
+        ::ActiveRecord::Base.respond_to?(:retrieve_connection)
+      end
+
+    HEREDOC
+  end
+end
+
+if !no?('Do you want Flipper auditing? [Yes]', :green)
+  append_to_file 'config/initializers/flipper.rb' do
+    <<~HEREDOC
+
+      class FlipperSubscriber
+        def call(*args)
+          event = ActiveSupport::Notifications::Event.new(*args)
+
+          if event.payload[:operation].in?(%i[enable disable])
+            FlipperAuditLog.create!(
+            operation: event.payload[:operation],
+            feature_name: event.payload[:feature].name,
+            thing_value: event.payload[:thing_value],
+            gate_name: event.payload[:gate_name],
+            result: event.payload[:result]
+            )
+          end
+        end
+      end
+
+      ActiveSupport::Notifications.subscribe(/flipper/, FlipperSubscriber.new)
+    HEREDOC
+  end
+
+  append_to_file 'config/initializers/flipper.rb' do
+    if flipper_storage_adapter == 'ActiveRecord'
+      <<~HEREDOC
+
+        Flipper.configure do |config|
+          config.default do
+            adapter = Flipper::Adapters::ActiveRecord.new
+            instrumented = Flipper::Adapters::Instrumented.new(adapter, instrumenter: ActiveSupport::Notifications)
+            Flipper.new(instrumented)
+          end
+        end
+      HEREDOC
+    else
+      <<~HEREDOC
+
+        Flipper.configure do |config|
+          config.default do
+            adapter = Flipper::Adapters::Redis.new(Redis.new(url: Rails.application.secrets.fetch(:redis_url)))
+            instrumented = Flipper::Adapters::Instrumented.new(adapter, instrumenter: ActiveSupport::Notifications)
+            Flipper.new(instrumented)
+          end
+        end
+      HEREDOC
+    end
+  end
+
+  run 'rails g migration CreateFlipperAuditLogs operation:string feature_name:string thing_value:string gate_name:string result:boolean'
+end
+
+append_to_file 'config/routes.rb', after: 'Rails.application.routes.draw do' do
+  <<-HEREDOC
+
+  mount Flipper::AuthenticatedApp, at: '/flipper'
+  HEREDOC
+end
+
 
 # Fix default rubocop errors
 run 'bundle exec rubocop -A'
