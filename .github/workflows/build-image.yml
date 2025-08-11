@@ -92,7 +92,7 @@ jobs:
           restore-keys: docker-build-test
 
       - name: Build test image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           builder: ${{ steps.buildx.outputs.name }}
@@ -164,7 +164,7 @@ jobs:
           restore-keys: docker-build-deploy
 
       - name: Build deploy image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         if: ${{ inputs.ecs_app_service_name != null || inputs.ecs_sidekiq_service_name != null }}
         with:
           context: .
