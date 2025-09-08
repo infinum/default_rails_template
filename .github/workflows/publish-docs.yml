@@ -156,7 +156,7 @@ jobs:
           bundler-cache: true
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
