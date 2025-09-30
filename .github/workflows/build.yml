@@ -61,6 +61,16 @@ on:
         required: false
         type: string
         default: all
+
+      # Defines the github OIDC aws role to assume, with permissions to pull the relevant secrets from the parameter store
+      aws_role_to_assume:
+        required: false
+        type: string
+
+      # Defines the path of the SSM parameters to pull from the Parameter store. ( e.g. /path/to/parameters/* )
+      aws_ssm_parameter_path:
+        required: false
+        type: string
     secrets:
       VAULT_ADDR:
         required: true
@@ -117,12 +127,15 @@ jobs:
             echo "ADDITIONAL_VARIABLES secret you supplied is not a valid JSON object. Check the formatting of the secret."
             exit 1
           fi
+
       - name: Git checkout
         uses: actions/checkout@v5
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
       - name: Prepare RuboCop cache
         uses: actions/cache@v4
         env:
@@ -133,11 +146,13 @@ jobs:
           restore-keys: |
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name }}-
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
+
       - name: Set up Node
         uses: actions/setup-node@v4
         if: ${{ inputs.use_node }}
         with:
           node-version-file: '.node-version'
+
       - name: Prepare node_modules cache
         uses: actions/cache@v4
         if: ${{ inputs.use_node }}
@@ -146,107 +161,136 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-modules-
+
       - name: Install JS packages
         if: ${{ inputs.use_node }}
         run: yarn install --frozen-lockfile
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        if: ${{ inputs.aws_role_to_assume }}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws_region }}
+          role-to-assume: ${{ inputs.aws_role_to_assume }}
+
+      - name: Pull SSM parameters from a path into .env
+        if: ${{ inputs.aws_role_to_assume }}
+        run: |
+          aws ssm get-parameters-by-path \
+            --path "${{ inputs.aws_ssm_parameter_path }}" \
+            --with-decryption \
+            --recursive \
+            --query "Parameters[*].[Name,Value]" \
+            --output text |
+          awk '{sub(".*/","",$1); print $1 "=" $2}' > .env
+
       - name: Prepare CI
         run: bin/prepare_ci
         if: hashFiles('bin/prepare_ci') != ''
+
+      - name: Prepare CI with Vault
+        run: bin/prepare_ci
+        if: ${{ !inputs.aws_role_to_assume && hashFiles('bin/prepare_ci') != '' }}
         env:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
           VAULT_AUTH_METHOD: ${{ secrets.VAULT_AUTH_METHOD }}
           VAULT_AUTH_ROLE_ID: ${{ secrets.VAULT_AUTH_ROLE_ID }}
           VAULT_AUTH_SECRET_ID: ${{ secrets.VAULT_AUTH_SECRET_ID }}
+
       - name: Wait for Postgres to be ready
         run: until docker exec postgres pg_isready; do sleep 1; done
+
       - name: CI steps
         id: ci_steps
         run: 'parallel --lb -k -j0 ::: ${{ inputs.ci_steps }}'
         env:
           RAILS_ENV: test
-      - name: Notify on Slack
-        env:
-          SUCCESS: ${{ steps.ci_steps.outcome == 'success' }}
-          FAILURE: ${{ steps.ci_steps.outcome == 'failure' }}
-          CHANNEL: ${{ inputs.slack_notification_channel }}
-          NOTIFY_ON: ${{ inputs.notify_on }}
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ always() && inputs.slack_notification_channel }}
-        run: |
-          if [ -z "$SLACK_BOT_TOKEN" ] ; then
-            echo "SLACK_BOT_TOKEN secret is missing from the workflow!"
-            exit 1
-          fi
 
-          if [[ "$NOTIFY_ON" != "success" && "$NOTIFY_ON" != "failure" && "$NOTIFY_ON" != "all" ]] ; then
-            echo "notify_on input is not valid. Must be one of: 'success', 'failure', or 'all'"
-            exit 1
-          fi
+      # - name: Notify on Slack
+      #   env:
+      #     SUCCESS: ${{ steps.ci_steps.outcome == 'success' }}
+      #     FAILURE: ${{ steps.ci_steps.outcome == 'failure' }}
+      #     CHANNEL: ${{ inputs.slack_notification_channel }}
+      #     NOTIFY_ON: ${{ inputs.notify_on }}
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   if: ${{ always() && inputs.slack_notification_channel }}
+      #   run: |
+      #     if [ -z "$SLACK_BOT_TOKEN" ] ; then
+      #       echo "SLACK_BOT_TOKEN secret is missing from the workflow!"
+      #       exit 1
+      #     fi
 
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          FULL_SHA=$(git rev-parse HEAD)
-          COMMIT_MESSAGE=$(git show -s --format=%s)
-          GITHUB_PR_URL=$(gh pr view --json url --jq .url || true)
-          GITHUB_PR_NUMBER=$(gh pr view --json number --jq .number || true)
-          GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$FULL_SHA"
-          GITHUB_BRANCH_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$GITHUB_REF_NAME"
+      #     if [[ "$NOTIFY_ON" != "success" && "$NOTIFY_ON" != "failure" && "$NOTIFY_ON" != "all" ]] ; then
+      #       echo "notify_on input is not valid. Must be one of: 'success', 'failure', or 'all'"
+      #       exit 1
+      #     fi
 
-          if [ -z "$GITHUB_PR_NUMBER" ] ; then
-            GITHUB_PR_MESSAGE=""
-          else
-            GITHUB_PR_MESSAGE="(PR <$GITHUB_PR_URL|#$GITHUB_PR_NUMBER>)"
-          fi
+      #     SHORT_SHA=$(git rev-parse --short HEAD)
+      #     FULL_SHA=$(git rev-parse HEAD)
+      #     COMMIT_MESSAGE=$(git show -s --format=%s)
+      #     GITHUB_PR_URL=$(gh pr view --json url --jq .url || true)
+      #     GITHUB_PR_NUMBER=$(gh pr view --json number --jq .number || true)
+      #     GITHUB_RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+      #     GITHUB_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$FULL_SHA"
+      #     GITHUB_BRANCH_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$GITHUB_REF_NAME"
 
-          if [[ "$SUCCESS" = true && ("$NOTIFY_ON" = "success" || "$NOTIFY_ON" = "all") ]] ; then
-            curl -X POST https://slack.com/api/chat.postMessage \
-                 -H "Content-type: application/json; charset=utf-8" \
-                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-                 -s -S \
-                 -d @- <<- EOF
-                  {
-                    "channel": "$CHANNEL",
-                    "attachments": [
-                      {
-                        "color": "#19a974",
-                        "blocks": [
-                          {
-                            "type": "section",
-                            "text": {
-                              "type": "mrkdwn",
-                              "text": "$GITHUB_ACTOR's <$GITHUB_RUN_URL|build> on <$GITHUB_BRANCH_URL|$GITHUB_REF_NAME> passed $GITHUB_PR_MESSAGE \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-          EOF
-          fi
+      #     if [ -z "$GITHUB_PR_NUMBER" ] ; then
+      #       GITHUB_PR_MESSAGE=""
+      #     else
+      #       GITHUB_PR_MESSAGE="(PR <$GITHUB_PR_URL|#$GITHUB_PR_NUMBER>)"
+      #     fi
 
-          if [[ "$FAILURE" = true && ("$NOTIFY_ON" = "failure" || "$NOTIFY_ON" = "all") ]] ; then
-            curl -X POST https://slack.com/api/chat.postMessage \
-                 -H "Content-type: application/json; charset=utf-8" \
-                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-                 -s -S \
-                 -d @- <<- EOF
-                  {
-                    "channel": "$CHANNEL",
-                    "attachments": [
-                      {
-                        "color": "#f75819",
-                        "blocks": [
-                          {
-                            "type": "section",
-                            "text": {
-                              "type": "mrkdwn",
-                              "text": "$GITHUB_ACTOR's <$GITHUB_RUN_URL|build> on <$GITHUB_BRANCH_URL|$GITHUB_REF_NAME> failed $GITHUB_PR_MESSAGE \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-          EOF
-          fi
+      #     if [[ "$SUCCESS" = true && ("$NOTIFY_ON" = "success" || "$NOTIFY_ON" = "all") ]] ; then
+      #       curl -X POST https://slack.com/api/chat.postMessage \
+      #            -H "Content-type: application/json; charset=utf-8" \
+      #            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+      #            -s -S \
+      #            -d @- <<- EOF
+      #             {
+      #               "channel": "$CHANNEL",
+      #               "attachments": [
+      #                 {
+      #                   "color": "#19a974",
+      #                   "blocks": [
+      #                     {
+      #                       "type": "section",
+      #                       "text": {
+      #                         "type": "mrkdwn",
+      #                         "text": "$GITHUB_ACTOR's <$GITHUB_RUN_URL|build> on <$GITHUB_BRANCH_URL|$GITHUB_REF_NAME> passed $GITHUB_PR_MESSAGE \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+      #                       }
+      #                     }
+      #                   ]
+      #                 }
+      #               ]
+      #             }
+      #     EOF
+      #     fi
+
+      #     if [[ "$FAILURE" = true && ("$NOTIFY_ON" = "failure" || "$NOTIFY_ON" = "all") ]] ; then
+      #       curl -X POST https://slack.com/api/chat.postMessage \
+      #            -H "Content-type: application/json; charset=utf-8" \
+      #            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+      #            -s -S \
+      #            -d @- <<- EOF
+      #             {
+      #               "channel": "$CHANNEL",
+      #               "attachments": [
+      #                 {
+      #                   "color": "#f75819",
+      #                   "blocks": [
+      #                     {
+      #                       "type": "section",
+      #                       "text": {
+      #                         "type": "mrkdwn",
+      #                         "text": "$GITHUB_ACTOR's <$GITHUB_RUN_URL|build> on <$GITHUB_BRANCH_URL|$GITHUB_REF_NAME> failed $GITHUB_PR_MESSAGE \n _ $COMMIT_MESSAGE _ (<$GITHUB_COMMIT_URL|$SHORT_SHA>)"
+      #                       }
+      #                     }
+      #                   ]
+      #                 }
+      #               ]
+      #             }
+      #     EOF
+      #     fi
