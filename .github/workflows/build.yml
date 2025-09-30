@@ -67,7 +67,7 @@ on:
         required: false
         type: string
 
-      # Defines the path of the SSM parameters to pull from the Parameter store. ( e.g. /path/to/parameters/* )
+      # Defines the path of the SSM parameters to pull from the Parameter store. ( e.g. /path/to/parameters/ )
       aws_ssm_parameter_path:
         required: false
         type: string
