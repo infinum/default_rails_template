@@ -73,13 +73,13 @@ on:
         type: string
     secrets:
       VAULT_ADDR:
-        required: true
+        required: false
       VAULT_AUTH_METHOD:
-        required: true
+        required: false
       VAULT_AUTH_ROLE_ID:
-        required: true
+        required: false
       VAULT_AUTH_SECRET_ID:
-        required: true
+        required: false
       SLACK_BOT_TOKEN:
         required: false
 
